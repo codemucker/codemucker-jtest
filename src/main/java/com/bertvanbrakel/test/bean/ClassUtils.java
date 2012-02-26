@@ -173,35 +173,64 @@ public class ClassUtils {
 	}
 	
 	public static boolean isReaderMethod(Method m) {
-		return m.getParameterTypes().length == 0 && (m.getName().startsWith("get") || m.getName().startsWith("is"));
+		return m.getParameterTypes().length == 0 && isReaderMethodFromName(m.getName());
 	}
 
-	public static boolean isWriterMethod(Method m) {
-		return m.getParameterTypes().length == 1 && (m.getName().startsWith("set"));
+	public static boolean isReaderMethodFromName(String methodName){
+		return methodName.startsWith("get") || methodName.startsWith("is");	
 	}
 	
+	public static boolean isWriterMethod(Method m) {
+		return m.getParameterTypes().length == 1 && isWriterMethodFromName(m.getName());
+	}
+	
+	public static boolean isWriterMethodFromName(String methodName){
+		return methodName.startsWith("set");
+	}
+	
+	/**
+	 * Extract the name of the bean property for the given method based on annotations or failing that
+	 * bean method name conventions (getFoo,setFoo,isFoo...)
+	 * 
+	 * @param m
+	 * @return null if no property name could be determined
+	 */
 	public static String extractPropertyName(Method m) {
 		String name = getNameFromAnnotation(m);
-		if( name != null ){
-			return name;
+		//How about builder methods?? part of annotations?
+		if( name == null ){
+			name = extractPropertyNameFromMethod(m.getName());
 		}
-		name = m.getName();
-		if (name.startsWith("get")) {
-			return ClassNameUtil.lowerFirstChar(name.substring(3));
-		} else if (name.startsWith("is")) {
-			return ClassNameUtil.lowerFirstChar(name.substring(2));
-		} else if (name.startsWith("set")) {
-			return ClassNameUtil.lowerFirstChar(name.substring(3));
+		return name;
+	}
+	
+	/**
+	 * Determine the bean property name based on the method name.
+	 * 
+	 * @param methodName name of the method
+	 * @return null if no property name could be determined
+	 */
+	public static String extractPropertyNameFromMethod(String methodName){
+		if (methodName.startsWith("get")) {
+			return ClassNameUtil.lowerFirstChar(methodName.substring(3));
+		} else if (methodName.startsWith("is")) {
+			return ClassNameUtil.lowerFirstChar(methodName.substring(2));
+		} else if (methodName.startsWith("set")) {
+			return ClassNameUtil.lowerFirstChar(methodName.substring(3));
 		}
-		throw new BeanException("Don't know how to extract the property name from method '%s', no property annotations either ", m.getName());
+		return null;
 	}
 
 	public static String extractPropertyName(Field f) {
 		String name = getNameFromAnnotation(f);
 		if (name == null) {
-			name = f.getName();
+			name = extractPropertyNameFromField(f.getName());
 		}
-		return removeHungarianNotation(name);
+		return name;
+	}
+	
+	public static String extractPropertyNameFromField(String fieldName) {
+		return removeHungarianNotation(fieldName);
 	}
 	
 	private static String removeHungarianNotation(String name){

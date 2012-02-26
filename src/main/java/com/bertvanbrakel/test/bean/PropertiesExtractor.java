@@ -96,6 +96,9 @@ public class PropertiesExtractor {
 		for (Method m : methods) {
 			if (isIncludeMethod(m) && isReaderMethod(m)) {
 				String propertyName = extractPropertyName(m);
+				if( propertyName == null){
+					throw new BeanException("Expected a propertyName as this is a reader method");
+				}
 				Class<?> propertyType = m.getReturnType();
 				boolean isInclude = isIncludeProperty(beanClass, propertyName, propertyType);
 				if (Void.class.equals(propertyType)) {
@@ -146,6 +149,9 @@ public class PropertiesExtractor {
 
 	private void extractAdditionalSetterMethod(Class<?> beanClass, BeanDefinition def, Method m) {
 		String propertyName = extractPropertyName(m);
+		if( propertyName == null){
+			throw new BeanException("Expected a propertyName as this is a setter method");
+		}			
 		PropertyDefinition p = def.getProperty(propertyName);
 		Class<?> propertyType = p != null ? p.getType() : m.getParameterTypes()[0];
 		boolean isInclude = isIncludeProperty(beanClass, propertyName, propertyType);
@@ -176,6 +182,7 @@ public class PropertiesExtractor {
 				}
 			}
 		}
+	
 	}
 	
 	private void extractFields(Class<?> beanClass, BeanDefinition def) {
