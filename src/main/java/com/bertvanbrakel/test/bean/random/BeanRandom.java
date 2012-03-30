@@ -190,6 +190,7 @@ public class BeanRandom implements RandomGenerator {
 	@Override
 	public Object generateRandom(Class beanClass, String propertyName, Class propertyType, Type genericType) {
 		RandomGenerator<?> provider = options.getProvider(propertyType);
+		//fall back to built in provider
 		if (provider == null) {
 			provider = builtInProviders.get(propertyType);
 			if (provider == null) {
@@ -202,6 +203,7 @@ public class BeanRandom implements RandomGenerator {
 				}
 			}
 		}
+		//if no custom provider assume property is a bean and reflectively populate it
 		if (provider == null) {
 			// lets create the bean
 			if (isGenerateBeanPropertyOfType(beanClass, propertyName, propertyType, genericType)) {
