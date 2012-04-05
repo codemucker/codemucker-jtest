@@ -25,6 +25,7 @@ import java.util.Collection;
 
 import org.junit.Test;
 
+import com.bertvanbrakel.test.finder.ClassFinder.Builder;
 import com.bertvanbrakel.test.finder.a.TstBeanOne;
 import com.bertvanbrakel.test.finder.b.TstBeanTwo;
 import com.bertvanbrakel.test.finder.c.TstAnonymous;
@@ -57,11 +58,11 @@ public class ClassFinderTest {
 			.build();
 			
 		ClassFinder finderWithout = newCriteria()
-			.includeClassesDir(false)
+			.setIncludeClassesDir(false)
 			.build();
 		
 		ClassFinder finderWith = newCriteria()
-			.includeClassesDir(true)
+			.setIncludeClassesDir(true)
 			.build();
 
 		Collection<Class<?>> foundDefault = list(finderDefault.findClasses());
@@ -86,7 +87,7 @@ public class ClassFinderTest {
 			.build();
 		
 		ClassFinder finderTests = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.build();
 
 		Collection<Class<?>> foundNoTests = list(finderNoTests.findClasses());
@@ -119,11 +120,11 @@ public class ClassFinderTest {
 	@Test
 	public void test_filename_exclude_pkg(){
 		ClassFinder finderWith = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.build();
 			
 		ClassFinder finderWithout = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.excludeFileName("*/b/*")
 			.build();
 
@@ -152,11 +153,11 @@ public class ClassFinderTest {
 	@Test
 	public void test_filename_include(){
 		ClassFinder finderNoInclude = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.build();
 			
 		ClassFinder finderInclude = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.includeFileName("*/a/*")
 			.build();
 
@@ -170,7 +171,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_filename_include_multiple_packages(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.includeFileName("*/a/*")
 			.includeFileName("*/b/*")
 			.build();
@@ -183,7 +184,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_filename_exclude_trumps_include(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.includeFileName("*/a/*")
 			.excludeFileName("*/a/*")
 			.build();
@@ -196,7 +197,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_include_instance_of(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.assignableTo(TstInterface1.class)
 			.build();
 		
@@ -212,7 +213,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_multiple_implements(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.assignableTo(TstInterface1.class)
 			.assignableTo(TstInterface2.class)
 			.build();
@@ -231,7 +232,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_class_must_match_multiple_matchers(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.assignableTo(TstInterface1.class, TstInterface2.class)
 			.build();
 		
@@ -245,7 +246,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_find_enums(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.build();
 		
 		Collection<Class<?>> found = list(finder.findClasses());
@@ -258,7 +259,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_filter_enum(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.excludeEnum()
 			.build();
 		
@@ -274,7 +275,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_filter_anonymous(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.includeFileName("*/c/*")
 			.excludeAnonymous()
 			.build();
@@ -287,7 +288,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_filter_inner_class(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.includeFileName("*/d/*")
 			.excludeInner()
 			.build();
@@ -300,7 +301,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_filter_interfaces(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.excludeInterfaces()
 			.build();
 		
@@ -317,7 +318,7 @@ public class ClassFinderTest {
 	@Test
 	public void test_find_has_annotations(){
 		ClassFinder finder = newCriteria()
-			.includeTestDir(true)
+			.setIncludeTestDir(true)
 			.withAnnotation(TstAnnotation.class)
 			.build();
 
@@ -331,6 +332,10 @@ public class ClassFinderTest {
 		//c.setIgnoreCallback(new ClassFinder.LoggingIgnoredCallback());
 		//c.setMatchCallback(new ClassFinder.LoggingMatchedCallback());
 		return c;
+	}
+
+	private static Builder newBuilder(){
+		 return ClassFinder.newBuilder();
 	}
 	
 	private <T> Matcher<T> exclude(Matcher<T> mactcher){

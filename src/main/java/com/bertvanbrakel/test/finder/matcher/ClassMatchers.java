@@ -1,9 +1,8 @@
 package com.bertvanbrakel.test.finder.matcher;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Modifier;
 
-import com.bertvanbrakel.test.finder.ClassPathResource;
+import com.google.common.base.Objects;
 
 public class ClassMatchers extends LogicalMatchers {
 
@@ -35,12 +34,10 @@ public class ClassMatchers extends LogicalMatchers {
 		}
 	};
 	
-	@SuppressWarnings("unchecked")
     public static Matcher<Class<?>> anyClass() {
     	return LogicalMatchers.any();
     }
     
-    @SuppressWarnings("unchecked")
     public static Matcher<Class<?>> noClass() {
     	return LogicalMatchers.none();
     }
@@ -53,8 +50,25 @@ public class ClassMatchers extends LogicalMatchers {
             }
     	};
     }
-	public static Matcher<Class<?>> assignableTo(Class<?>... superclass) {
-		return new ClassAssignableMatcher(superclass);
+	public static Matcher<Class<?>> assignableTo(final Class<?>... superclass) {
+		return new Matcher<Class<?>>() {
+			@Override
+			public boolean matches(Class<?> found) {
+				for (Class<?> require : superclass) {
+					if (!require.isAssignableFrom(found)) {
+						return false;
+					}
+				}
+				return true;
+			}
+			
+			@Override
+			public String toString(){
+				return Objects.toStringHelper(this)
+					.add("superClassesMatching", superclass)
+					.toString();
+			}
+		};
 	}
 	
 	public static Matcher<Class<?>> withAnnotation(Class<? extends Annotation>... annotations){

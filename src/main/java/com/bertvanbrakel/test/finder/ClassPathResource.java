@@ -6,7 +6,7 @@ import org.apache.commons.io.FilenameUtils;
 
 import com.google.common.base.Objects;
 
-public final class ClassPathResource {
+public class ClassPathResource  {
 
 	private final ClassPathRoot classPathRoot;
 	private final File file;
@@ -52,6 +52,34 @@ public final class ClassPathResource {
 		return fromArchive;
 	}
 	
+	public String getRelPath() {
+		return relPath;
+	}
+
+	public String getPackagePart(){
+		int slash = relPath.lastIndexOf('/');
+		if( slash != -1){
+			String dottified = relPath.substring(0, slash).replace('/', '.');	
+			if (dottified.charAt(0) == '.') {
+				dottified = dottified.substring(1);
+			}
+			return dottified;
+		}
+		return null;
+	}
+	
+	public String getBaseFileNamePart(){
+		return FilenameUtils.getBaseName(relPath);
+	}
+	
+	public String getPathWithoutExtension(){
+		String ext = getExtension();
+		if( ext != null ){
+			return relPath.substring(0,relPath.length() - ext.length() - 1);
+		}
+		return relPath;
+	}
+	
 	public boolean hasExtension(String extension){
 		return extension.equals(getExtension());
 	}
@@ -64,10 +92,6 @@ public final class ClassPathResource {
 		return isDir()?null:FilenameUtils.getExtension(getRelPath());
 	}
 	
-	public String getRelPath() {
-		return relPath;
-	}
-
 	@Override
 	public String toString(){
 		return Objects

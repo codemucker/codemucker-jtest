@@ -5,7 +5,7 @@ import java.util.regex.Pattern;
 import com.bertvanbrakel.test.finder.ClassPathResource;
 import com.bertvanbrakel.test.util.TestUtils;
 
-public class FileMatchers extends LogicalMatchers {
+public class ResourceMatchers extends LogicalMatchers {
 	
     @SuppressWarnings("unchecked")
     public static Matcher<ClassPathResource> any() {

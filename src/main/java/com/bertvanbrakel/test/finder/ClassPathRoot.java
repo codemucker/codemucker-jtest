@@ -13,7 +13,7 @@ import com.google.common.collect.ImmutableSet;
 public class ClassPathRoot {
 
 	public static enum TYPE {
-		COMPILE,COMPILE_TEST,SRC_TEST,SRC,DEPENDENCY,COMPILE_GENERATED,UNKNOWN;
+		MAIN_SRC,TEST_SRC,MAIN_COMPILE,TEST_COMPILE,DEPENDENCY,GENERATED_SRC,GENERATED_COMPILE,UNKNOWN;
 	}
 	
 	private static final Collection<String> DEFAULT_ARCHIVE_TYPES = ImmutableSet.of("jar", "war", "zip", "ear");
@@ -48,9 +48,9 @@ public class ClassPathRoot {
 		return path.isDirectory();
 	}
 	
-	public boolean isArchive(){
+	public boolean isArchive() {
 		String extension = FilenameUtils.getExtension(path.getName());
-		return DEFAULT_ARCHIVE_TYPES.contains(extension);
+		return extension == null ? false : DEFAULT_ARCHIVE_TYPES.contains(extension);
 	}
 
 	@Override
@@ -58,8 +58,8 @@ public class ClassPathRoot {
 		return Objects
     		.toStringHelper(this)
     		.add("path", getPathName())
-    		.add("type",type)
-    		.add("isArchive",isArchive())
+    		.add("type", type)
+    		.add("isArchive", isArchive())
     		.toString();
 	}
 	

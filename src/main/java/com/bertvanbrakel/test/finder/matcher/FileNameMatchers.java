@@ -2,8 +2,6 @@ package com.bertvanbrakel.test.finder.matcher;
 
 import java.util.regex.Pattern;
 
-import com.bertvanbrakel.test.util.TestUtils;
-
 public class FileNameMatchers extends LogicalMatchers {
 	
     @SuppressWarnings("unchecked")
@@ -47,10 +45,10 @@ public class FileNameMatchers extends LogicalMatchers {
 	}
 	
 	public static Matcher<String> withAntPath(String antPattern) {
-		return withPath(TestUtils.antExpToPattern(antPattern));
+		return RegExpMatcher.withAntPattern(antPattern);
 	}
 
 	public static Matcher<String> withPath(Pattern pattern) {
-		return new RegExpPatternFileNameMatcher(pattern);
+		return RegExpMatcher.withPattern(pattern);
 	}
 }

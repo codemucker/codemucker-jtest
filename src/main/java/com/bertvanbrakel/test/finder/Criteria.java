@@ -15,120 +15,114 @@
  */
 package com.bertvanbrakel.test.finder;
 
-import static com.google.common.collect.Lists.newArrayList;
-
 import java.io.File;
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.regex.Pattern;
 
 import com.bertvanbrakel.test.finder.ClassFinder.Builder;
-import com.bertvanbrakel.test.finder.ClassFinder.FinderErrorHandler;
-import com.bertvanbrakel.test.finder.ClassFinder.FinderFindCallback;
+import com.bertvanbrakel.test.finder.ClassFinder.FinderErrorCallback;
+import com.bertvanbrakel.test.finder.ClassFinder.FinderFilter;
 import com.bertvanbrakel.test.finder.ClassFinder.FinderIgnoredCallback;
+import com.bertvanbrakel.test.finder.ClassFinder.FinderMatchedCallback;
 import com.bertvanbrakel.test.finder.matcher.ClassMatchers;
-import com.bertvanbrakel.test.finder.matcher.FileMatchers;
-import com.bertvanbrakel.test.finder.matcher.LogicalMatchers;
+import com.bertvanbrakel.test.finder.matcher.IncludeExcludeMatcherBuilder;
 import com.bertvanbrakel.test.finder.matcher.Matcher;
+import com.bertvanbrakel.test.finder.matcher.ResourceMatchers;
 
 public class Criteria {
 	
-	private final Collection<Matcher<ClassPathResource>> excludeFileNameMatchers = newArrayList();
-	private final Collection<Matcher<ClassPathResource>> includeFileNameMatchers = newArrayList();
+	private final ClassPathBuilder classPathBuilder = ClassPathBuilder.newBuilder();
 	
-	private final Collection<Matcher<Class<?>>> includeClassMatchers = newArrayList();
-	private final Collection<Matcher<Class<?>>> excludeClassMatchers = newArrayList();
-	
-	private boolean includeClassesDir = true;
-	private boolean includeTestDir = false;
-	private boolean includeClasspath = false;
+	private final IncludeExcludeMatcherBuilder<ClassPathResource> resources = IncludeExcludeMatcherBuilder.newBuilder();
+	private final IncludeExcludeMatcherBuilder<Class<?>> classes = IncludeExcludeMatcherBuilder.newBuilder();
+	private final IncludeExcludeMatcherBuilder<String> classNames = IncludeExcludeMatcherBuilder.newBuilder();
+	private final IncludeExcludeMatcherBuilder<String> resourceNames = IncludeExcludeMatcherBuilder.newBuilder();
 	
 	private ClassFinder.Builder builder = ClassFinder.newBuilder();
 
 	public ClassFinder build() {
 		Builder copy = builder.copyOf();
-		copy.setClassMatcher(toClassMatcher());
-		// .set(toResourceMatcher())
-		copy.setClassPathResourceMatcher(toResourceMatcher());
-		if (includeClassesDir) {
-			copy.setIncludeProjectCompileDir();
-		}
-		if (includeClasspath) {
-			copy.setIncludeClassPath();
-		}
-		if (includeTestDir) {
-			copy.setIncludeProjectTestDir();
-		}
+		
+		FinderFilter filter = MatcherBackedFinderFilter.newBuilder()
+			.setClassMatcher(classes.build())
+			.setResourceMatcher(resources.build())
+			.setClassNameMatcher(classNames.build())
+			.setResourceNameMatcher(resourceNames.build())
+			.build();
+		copy.setFilter(filter);
+		copy.setSearchClassPaths(classPathBuilder.build());
+		
+		
 		return copy.build();
 	}
 
 	public Criteria setIgnoreCallback(FinderIgnoredCallback callback){
-		builder.setCallbackOnIgnored(callback);
+		builder.setIgnoredCallback(callback);
 		return this;
 	}
 	
-	public Criteria setMatchCallback(FinderFindCallback callback){
-		builder.setCallbackOnMatched(callback);
+	public Criteria setMatchCallback(FinderMatchedCallback callback){
+		builder.setMatchedCallback(callback);
 		return this;
 	}
 	
-	public Criteria setErrorCallback(FinderErrorHandler callback){
-		builder.setCallbackOnError(callback);
+	public Criteria setErrorCallback(FinderErrorCallback callback){
+		builder.setErrorCallback(callback);
 		return this;
 	}
 
-	public Criteria classLoader(ClassLoader classLoader) {
+	public Criteria setClassLoader(ClassLoader classLoader) {
     	builder.setClassLoader(classLoader);
     	return this;
     }
 
-	public Criteria includeClassesDir(boolean b) {
-		this.includeClassesDir = b;
+	public Criteria setIncludeClassesDir(boolean b) {
+		classPathBuilder.setIncludeClassesDir(b);
 		return this;
 	}
 
-	public Criteria includeTestDir(boolean b) {
-		this.includeTestDir = b;
+	public Criteria setIncludeTestDir(boolean b) {
+		classPathBuilder.setIncludeTestDir(b);
 		return this;
 	}
 
-	public Criteria setIncludeClasspath(boolean includeClasspath) {
-    	this.includeClasspath = includeClasspath;
+	public Criteria setIncludeClasspath(boolean b) {
+		classPathBuilder.setIncludeClasspath(b);
     	return this;
     }
 
 	public Criteria addClassPath(File dir) {
-		builder.addClassPathDir(dir);
+		classPathBuilder.addClassPathDir(dir);
 		return this;
 	}
 
 	public Criteria excludeFileName(String path) {
-		excludeFileName(FileMatchers.withAntPath(path));
+		excludeFileName(ResourceMatchers.withAntPath(path));
 		return this;
 	}
 	
 	public Criteria excludeFileName(Pattern pattern) {
-		excludeFileName(FileMatchers.withPath(pattern));
+		excludeFileName(ResourceMatchers.withPath(pattern));
 		return this;
 	}
 
 	public Criteria excludeFileName(Matcher<ClassPathResource> matcher) {
-		this.excludeFileNameMatchers.add(matcher);
+		resources.addExclude(matcher);
 		return this;
 	}
 
 	public Criteria includeFileName(String pattern) {
-		includeFileName(FileMatchers.withAntPath(pattern));
+		includeFileName(ResourceMatchers.withAntPath(pattern));
 		return this;
 	}
 
 	public Criteria includeFileName(Pattern pattern) {
-		includeFileName(FileMatchers.withPath(pattern));
+		includeFileName(ResourceMatchers.withPath(pattern));
 		return this;
 	}
 	
 	public Criteria includeFileName(Matcher<ClassPathResource> matcher) {
-		this.includeFileNameMatchers.add(matcher);
+		resources.addInclude(matcher);
 		return this;
 	}
 	
@@ -143,7 +137,7 @@ public class Criteria {
 	}
 	
 	public Criteria includeClassMatching(Matcher<Class<?>> matcher) {
-		this.includeClassMatchers.add(matcher);
+		classes.addInclude(matcher);
 		return this;
 	}
 	
@@ -168,34 +162,8 @@ public class Criteria {
 	}
 
 	public Criteria excludeClassMatching(Matcher<Class<?>> matcher) {
-		this.excludeClassMatchers.add(matcher);
+		classes.addExclude(matcher);
 		return this;
 	}
-	
-	public Matcher<ClassPathResource> toResourceMatcher() {
-		return combine(includeFileNameMatchers,excludeFileNameMatchers);
-	}
-	
-	public Matcher<String> toClassNameMatcher(){
-		return LogicalMatchers.any();//combine(includeClassNameMatchers,excludeClassNameMatchers);
-	}
 
-	public Matcher<Class<?>> toClassMatcher() {		
-		return combine(includeClassMatchers,excludeClassMatchers);
-	}
-	
-	private <T> Matcher<T> combine(Collection<Matcher<T>>includes,Collection<Matcher<T>> excludes){
-		if( includes.size()>0 && excludes.size() > 0) {
-			return LogicalMatchers.all(
-					LogicalMatchers.any(includes)
-					, LogicalMatchers.not(LogicalMatchers.all(excludes))
-			);	
-		} else if( excludes.size() > 0){
-			return LogicalMatchers.not(LogicalMatchers.any(excludes));
-		} else if( includes.size() > 0){
-			return LogicalMatchers.any(includes);
-		} else {
-			return LogicalMatchers.any();
-		}
-	}
 }

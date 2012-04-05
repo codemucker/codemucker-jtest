@@ -4,7 +4,6 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newLinkedHashMap;
 import static com.google.common.collect.Sets.newHashSet;
-import static com.google.common.collect.Sets.newLinkedHashSet;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -13,57 +12,50 @@ import java.util.Collection;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
 import org.apache.commons.io.FilenameUtils;
-import org.apache.log4j.Logger;
 
-import com.bertvanbrakel.test.finder.ClassPathRoot.TYPE;
-import com.bertvanbrakel.test.finder.matcher.ClassMatchers;
-import com.bertvanbrakel.test.finder.matcher.ClassNameMatchers;
-import com.bertvanbrakel.test.finder.matcher.ClassPathMatchers;
-import com.bertvanbrakel.test.finder.matcher.FileMatchers;
-import com.bertvanbrakel.test.finder.matcher.Matcher;
 import com.bertvanbrakel.test.util.ClassNameUtil;
-import com.bertvanbrakel.test.util.ProjectFinder;
-import com.bertvanbrakel.test.util.ProjectResolver;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 
 public class ClassFinder {
 	
-	public static interface FinderErrorHandler {
-		public void onResourceError(ClassPathResource resource,Exception e);
-		public void onClassError(String fullClassname, Exception e);
-		public void onArchiveError(ClassPathResource archive, Exception e);		
-	}
-	
-	public static interface FinderFindCallback {
-		public void onArchiveMatched(ClassPathResource matchedArchive);
-		public void onResourceMatched(ClassPathResource matchedResource);
-		public void onClassNameMatched(String matchedClassName);
-		public void onClassPath(ClassPathRoot matchedRoot);
-		public void onClassMatched(Class<?> matchedClass);
-	}
-
-	public static interface FinderIgnoredCallback {
-		public void onArchiveIgnored(ClassPathResource ignoredArchive);
-		public void onResourceIgnored(ClassPathResource ignoredResource);
-		public void onClassNameIgnored(String ignoredClassName);
-		public void onClassIgnored(Class<?> ignoredClass);
-		public void onClassPathIgnored(ClassPathRoot ignoredRoot);
-	}
-	
 	public static interface FinderFilter {
+		public boolean isInclude(Object obj);
 		public boolean isIncludeClassPath(ClassPathRoot root);
 		public boolean isIncludeDir(ClassPathResource resource);
 		public boolean isIncludeResource(ClassPathResource resource);
 		public boolean isIncludeClassName(String className);
 		public boolean isIncludeClass(Class<?> classToMatch);
 		public boolean isIncludeArchive(ClassPathResource archiveFile);
+	}
+	
+	public static interface FinderMatchedCallback {
+		public void onMatched(Object obj);
+		public void onClassPathMatched(ClassPathRoot matchedRoot);
+		public void onResourceMatched(ClassPathResource matchedResource);
+		public void onArchiveMatched(ClassPathResource matchedArchive);
+		public void onClassNameMatched(String matchedClassName);
+		public void onClassMatched(Class<?> matchedClass);
+	}
+
+	public static interface FinderIgnoredCallback {
+		public void onIgnored(Object obj);
+		public void onClassPathIgnored(ClassPathRoot ignoredRoot);
+		public void onResourceIgnored(ClassPathResource ignoredResource);
+		public void onArchiveIgnored(ClassPathResource ignoredArchive);
+		public void onClassNameIgnored(String ignoredClassName);
+		public void onClassIgnored(Class<?> ignoredClass);
+	}
+	
+	public static interface FinderErrorCallback {
+		public void onError(Object obj,Exception e);
+		public void onResourceError(ClassPathResource resource,Exception e);
+		public void onArchiveError(ClassPathResource archive, Exception e);		
+		public void onClassError(String fullClassname, Exception e);
 	}
 	
 	private static FileFilter DIR_FILTER = new FileFilter() {
@@ -84,12 +76,12 @@ public class ClassFinder {
 	
 	private static final Collection<String> DEFAULT_ARCHIVE_TYPES = ImmutableSet.of("jar", "war", "zip", "ear");
 	
-	private final Set<ClassPathRoot> classPathRoots;
+	private final List<ClassPathRoot> classPathRoots;
 	private final ClassLoader classLoader;
 	private final FinderFilter filter;
-	private final FinderErrorHandler errorHandler;
+	private final FinderErrorCallback errorHandler;
 	private final FinderIgnoredCallback ignoredCallback;
-	private final FinderFindCallback matchedCallback;
+	private final FinderMatchedCallback matchedCallback;
 	private final Collection<String> archiveTypes = newHashSet(DEFAULT_ARCHIVE_TYPES);
 	
 
@@ -103,8 +95,14 @@ public class ClassFinder {
 	
 //	public static void main(String[] args){
 //		
-//		FinderFindCallback callback = new BaseMatchedCallback(){
+//		FinderMatchedCallback callback = new BaseMatchedCallback(){
 //			private int classCount = 0;
+//
+//			@Override
+//            public void onMatched(Object obj) {
+//				System.out.println( "matched:" + obj);
+//            }
+//
 //			@Override
 //            public void onClassMatched(Class<?> matchedClass) {
 //				System.out.println( classCount + " class:" + matchedClass.getName());
@@ -112,14 +110,22 @@ public class ClassFinder {
 //			}
 //		};
 //		
-//        ClassFinder finder = ClassFinder
-//			.newBuilder()
-//				.setClassMatcher(ClassMatchers.all(ClassMatchers.excludeEnum(),ClassMatchers.includeInterfaces()))
-//				.setIncludeProjectCompileDir()
-//				.setCallbackOnMatched(callback)
-//				.setSwallowErrors()
-//				.build();
-//		
+////		ClassFinder finder = ClassFinder
+////				.newBuilder()
+////					//.setClassMatcher(ClassMatchers.all(ClassMatchers.excludeEnum(),ClassMatchers.includeInterfaces()))
+////					//.setIncludeProjectCompileDir()
+////					.setCallbackOnMatched(callback)
+////					.setSwallowErrors()
+////					.build();
+//		ClassFinder finder = ClassFinder
+//				.newCriteria()
+//					//.setMatchCallback(ClassMatchers.all(ClassMatchers.excludeEnum(),ClassMatchers.includeInterfaces()))
+//					.setIncludeClassesDir(true)
+//					.setMatchCallback(callback)
+//					//.setSwallowErrors()
+//					
+//					.build();
+//			
 //		System.out.println("starting");
 //		finder.findClasses();
 //		System.out.println("done!");
@@ -129,11 +135,11 @@ public class ClassFinder {
 			List<ClassPathRoot> classPathRoots
 			, FinderFilter filter
 			, ClassLoader classLoader
-			, FinderErrorHandler errorHandler
+			, FinderErrorCallback errorHandler
 			, FinderIgnoredCallback ignoredCallback 
-			, FinderFindCallback matchedCallback
+			, FinderMatchedCallback matchedCallback
 			) {
-		this.classPathRoots = Sets.newLinkedHashSet(checkNotNull(classPathRoots,"expect classPathRoots to search"));
+		this.classPathRoots = cleanAndCheckRoots(classPathRoots);
 		this.filter = checkNotNull(filter, "expect filter");
 		this.classLoader = checkNotNull(classLoader,"expect class loader");
 		this.errorHandler = checkNotNull(errorHandler, "expect errorHandlerr");
@@ -141,6 +147,18 @@ public class ClassFinder {
 		this.matchedCallback = checkNotNull(matchedCallback,"expect matchedCallback");	
 	}
 
+	private List<ClassPathRoot> cleanAndCheckRoots(Iterable<ClassPathRoot> roots){
+		checkNotNull(roots,"expect class path roots to search");
+		Map<String, ClassPathRoot> map = newLinkedHashMap();
+		for( ClassPathRoot root:roots){
+			String key = root.getPathName();
+			if( root.isTypeKnown() || !map.containsKey(key) ){
+				map.put(key, root);
+			}
+		}
+		//checkState(map.size()>0,"need some class path roots to search");
+		return newArrayList(map.values());
+	}
 	public Collection<Class<?>> findClasses() {
 		return findClasses(findClassNames());
 	}
@@ -157,10 +175,12 @@ public class ClassFinder {
 		Class<?> loadedClass = null;
 		try {
 			loadedClass = loadClass(className);
-			if (filter.isIncludeClass(loadedClass)) {
-				foundClasses.add(loadedClass);
+			if (filter.isInclude(loadedClass) && filter.isIncludeClass(loadedClass)) {
+				matchedCallback.onMatched(loadedClass);
 				matchedCallback.onClassMatched(loadedClass);
+				foundClasses.add(loadedClass);
 			} else {
+				ignoredCallback.onIgnored(loadedClass);
 				ignoredCallback.onClassIgnored(loadedClass);
 			}
 		} catch (Exception e) {
@@ -196,10 +216,12 @@ public class ClassFinder {
 	private void walkClassNames(Collection<String> foundClassNames, ClassPathResource resource) {
 		if (resource.hasExtension("class")) {
 			String className = ClassNameUtil.pathToClassName(resource.getRelPath());
-			if (filter.isIncludeClassName(className)) {
-				foundClassNames.add(className);
+			if (filter.isInclude(className) && filter.isIncludeClassName(className)) {
+				matchedCallback.onMatched(className);
 				matchedCallback.onClassNameMatched(className);
+				foundClassNames.add(className);
 			} else {
+				ignoredCallback.onIgnored(className);
 				ignoredCallback.onClassNameIgnored(className);
 			}
 		}
@@ -212,8 +234,9 @@ public class ClassFinder {
 	private Collection<ClassPathResource> findResources(Collection<ClassPathRoot> rootClassPathEntries){
     	Collection<ClassPathResource> resources = newArrayList();
     	for (ClassPathRoot root : rootClassPathEntries) {
-    		if( filter.isIncludeClassPath(root)){
-    			matchedCallback.onClassPath(root);
+    		if(filter.isInclude(root) && filter.isIncludeClassPath(root)){
+    			matchedCallback.onMatched(root);
+    			matchedCallback.onClassPathMatched(root);
         		if( root.isDirectory()){
         			walkResourceDir(resources, root);
         		} else {
@@ -221,10 +244,12 @@ public class ClassFinder {
         			if( archiveTypes.contains(extension)){
         				walkArchiveEntries(resources, root, root.getPath());
         			} else {
+        				ignoredCallback.onIgnored(root);
         				ignoredCallback.onClassPathIgnored(root);
         			}
         		}
     		} else {
+				ignoredCallback.onIgnored(root);
     			ignoredCallback.onClassPathIgnored(root);
     		}
     	}
@@ -233,10 +258,12 @@ public class ClassFinder {
 	
 	public void walkArchiveEntries(Collection<ClassPathResource> found, ClassPathRoot root, File archive) {
 		ClassPathResource resource = new ClassPathResource(root, archive, "", false);
-		if (filter.isIncludeArchive(resource)) {
+		if (filter.isInclude(resource) && filter.isIncludeArchive(resource)) {
+			matchedCallback.onMatched(resource);
 			matchedCallback.onArchiveMatched(resource);
 			internalWalkArchive(found,root, archive);
 		} else {
+			ignoredCallback.onIgnored(resource);
 			ignoredCallback.onArchiveIgnored(resource);
 		}
 	}
@@ -270,10 +297,12 @@ public class ClassFinder {
 				String name = entry.getName();
 				name = ensureStartsWithSlash(name);
 				ClassPathResource zipResourceEntry = new ClassPathResource(root, zipFile, name, true);
-				if( filter.isIncludeResource(zipResourceEntry)){
+				if(filter.isInclude(zipResourceEntry) && filter.isIncludeResource(zipResourceEntry)){
+					matchedCallback.onMatched(zipResourceEntry);
 					matchedCallback.onResourceMatched(zipResourceEntry);
 					found.add(zipResourceEntry);
 				} else{
+					ignoredCallback.onIgnored(zipResourceEntry);
 					ignoredCallback.onResourceIgnored(zipResourceEntry);
 				}
 			}
@@ -287,7 +316,6 @@ public class ClassFinder {
 	    return name;
     }
 
-	
 	private void walkResourceDir(Collection<ClassPathResource> found, ClassPathRoot root) {
 		walkDir(found, root, "", root.getPath());
 	}
@@ -302,10 +330,12 @@ public class ClassFinder {
 		for (File f : files) {
 			String relPath = parentPath + "/" + f.getName();
 			ClassPathResource child = new ClassPathResource(rootDir, f, relPath, false);
-			if (filter.isIncludeResource(child)) {
-				found.add(child);
+			if (filter.isInclude(child) && filter.isIncludeResource(child)) {
+				matchedCallback.onMatched(child);
 				matchedCallback.onResourceMatched(child);
+				found.add(child);
 			} else {
+				ignoredCallback.onIgnored(child);
 				ignoredCallback.onResourceIgnored(child);
 			}
 		}
@@ -317,466 +347,91 @@ public class ClassFinder {
 	
 	public static class Builder {
 		
-		private final Map<String,ClassPathRoot> classPathsRoots = newLinkedHashMap();
-
-		private ProjectResolver projectResolver = ProjectFinder.getDefaultResolver();
-		private Matcher<ClassPathRoot> classPathMatcher;
-		private Matcher<String> fileNameMatcher;
-		private Matcher<String> classNameMatcher;
-		private Matcher<Class<?>> classMatcher;
-		private Matcher<ClassPathResource> classPathResourceMatcher;
-		private FinderFindCallback findMatchedCallback;
+		private FinderMatchedCallback findMatchedCallback;
 		private FinderIgnoredCallback findIgnoredCallback;
-		private FinderErrorHandler findErrorCallback;
-		
+		private FinderErrorCallback findErrorCallback;
+		private FinderFilter finderFilter;
 		private ClassLoader classLoader;
+		private List<ClassPathRoot> classPathRoots = newArrayList();
 
 		public ClassFinder build(){
 			return new ClassFinder(
-				toClassPathDirs()
-			  , toFinderFilter()
+			    classPathRoots
+			  , toFilter()
 			  , toClassLoader()
-			  , toFinderErrorHandler()
+			  , toErrorCallback()
 			  , toIgnoredCallback()
 			  , toMatchedCallback()  
 			);
 		}
 		
-		public Builder copyOf(){
-			Builder copy = new Builder();
-			copy.classNameMatcher = classNameMatcher;
-			copy.classPathMatcher = classPathMatcher;
-			copy.classPathResourceMatcher = classPathResourceMatcher;
-			copy.classPathsRoots.putAll(classPathsRoots);
-			copy.fileNameMatcher = fileNameMatcher;
-			copy.findErrorCallback = findErrorCallback;
-			copy.findIgnoredCallback = findIgnoredCallback;
-			copy.findMatchedCallback = findMatchedCallback;
-			copy.projectResolver = projectResolver;
-			
-			return copy;
-		}
-		
-		public Builder setProjectResolver(ProjectResolver projectResolver) {
-        	this.projectResolver = projectResolver;
-        	return this;
-        }
-		
-		public Builder setCallbackOnMatched(FinderFindCallback findMatchedCallback) {
-        	this.findMatchedCallback = findMatchedCallback;
-        	return this;
-        }
-
-		public Builder setCallbackOnIgnored(FinderIgnoredCallback findIgnoredCallback) {
-        	this.findIgnoredCallback = findIgnoredCallback;
-        	return this;
-		}
-
-		public Builder setCallbackOnError(FinderErrorHandler findErrorCallback) {
-        	this.findErrorCallback = findErrorCallback;
-        	return this;
-		}
-		
-		public Builder setClassMatcher(Matcher<Class<?>> classMatcher) {
-        	this.classMatcher = classMatcher;
-        	return this;
-        }
-
-		public Builder setClassPathMatcher(Matcher<ClassPathRoot> classPathMatcher) {
-        	this.classPathMatcher = classPathMatcher;
-        	return this;
-        }
-//
-//		public Builder setClassMatchers(Matcher<Class<?>>... matchers) {
-//        	this.classMatcher = ClassMatchers.all(matchers);
-//        	return this;
-//        }
-		
-		public Builder anyClassMatchers(Matcher<Class<?>>... matchers) {
-        	this.classMatcher = ClassMatchers.any(matchers);
-        	return this;
-        }
-		
-		public Builder setClassNameMatcher(Matcher<String> classNameMatcher) {
-        	this.classNameMatcher = classNameMatcher;
-        	return this;
-		}
-
-		public Builder setFileNameMatcher(Matcher<String> fileNameMatcher) {
-        	this.fileNameMatcher = fileNameMatcher;
-        	return this;
-		}
-
-		public Builder setClassPathResourceMatcher(Matcher<ClassPathResource> classPathResourceMatcher) {
-        	this.classPathResourceMatcher = classPathResourceMatcher;
-        	return this;
-		}
-
-		public Builder setClassLoader(ClassLoader classLoader) {
-        	this.classLoader = classLoader;
-        	return this;
-		}
-		
-		public Builder setIncludeProjectCompileDir(){
-			addClassPaths(getResolver().getMainCompileTargetDirs(),TYPE.COMPILE);
-			return this;
-		}
-		
-		public Builder setIncludeProjectGeneratedDir(){
-			addClassPaths(getResolver().getCompileGeneratedDirs(),TYPE.COMPILE_GENERATED);
-			return this;
-		}
-		
-		public Builder setIncludeProjectTestDir(){
-			addClassPaths(getResolver().getTestCompileTargetDirs(),TYPE.COMPILE_TEST);
-			return this;
-		}
-		
-		private ProjectResolver getResolver(){
-			return projectResolver;
-		}
-		
-		public Builder addClassPathDir(String path) {
-	    	addClassPathDir(new File(path));
-	    	return this;
-	    }
-	
-		public Builder addClassPaths(Collection<File> paths) {
-			for( File path:paths){
-				addClassPathDir(path);
-			}
-	    	return this;
-	    }
-		
-		public Builder addClassPaths(Collection<File> paths, TYPE type) {
-			for( File path:paths){
-				addClassPath(new ClassPathRoot(path,type));
-			}
-	    	return this;
-	    }
-		
-		public Builder addClassPathDir(File path) {
-			addClassPath(new ClassPathRoot(path,TYPE.UNKNOWN));
-	    	return this;
-	    }
-		
-		public Builder addClassPath(ClassPathRoot root) {
-			if (!classPathsRoots.containsKey(root.getPathName()) || root.isTypeKnown()) {
-				classPathsRoots.put(root.getPathName(), root);
-			}
-			return this;
-		}
-		
-		public Builder setIncludeClassPath() {
-			addClassPaths(findClassPathDirs());
-	    	return this;
-	    }
-		
-		public Builder setSwallowErrors(){
-			this.findErrorCallback = new BaseErrorHandler();
-			return this;
-		}
-		
-		private Set<File> findClassPathDirs() {
-			Set<File> files = newLinkedHashSet();
-
-			String classpath = System.getProperty("java.class.path");
-			String sep = System.getProperty("path.separator");
-			String[] paths = classpath.split(sep);
-
-			Collection<String> fullPathNames = newArrayList();
-			for (String path : paths) {
-				try {
-					File f = new File(path);
-					if (f.exists() & f.canRead()) {
-						String fullPath = f.getCanonicalPath();
-						if (!fullPathNames.contains(fullPath)) {
-							files.add(f);
-							fullPathNames.add(fullPath);
-						}
-					}
-				} catch (IOException e) {
-					throw new ClassFinderException("Error trying to resolve pathname " + path);
-				}
-			}
-			return files;
-		}
-	
-		private List<ClassPathRoot> toClassPathDirs(){
-			if( classPathsRoots == null ){
-				return newArrayList();
-			}
-			return newArrayList(classPathsRoots.values());
-		}
-		
-		private ClassLoader toClassLoader(){
-			return classLoader != null?classLoader:Thread.currentThread().getContextClassLoader();
-		}
-	
-		private Matcher<ClassPathResource> toFileMatcher() {
-			return classPathResourceMatcher == null ? FileMatchers.any() : classPathResourceMatcher;
-		}
-
-		private Matcher<ClassPathRoot> toClassPathMatcher() {
-			return classPathMatcher == null ? ClassPathMatchers.any() : classPathMatcher;
-		}
-
-		private Matcher<String> toClassNameMatcher() {
-			return classNameMatcher == null ? ClassNameMatchers.any() : classNameMatcher;
-		}
-
-		private Matcher<Class<?>> toClassMatcher() {
-			return classMatcher == null ? ClassMatchers.anyClass() : classMatcher;
+		private ClassLoader toClassLoader() {
+			return classLoader != null ? classLoader : Thread.currentThread().getContextClassLoader();
 		}
 
 		private FinderIgnoredCallback toIgnoredCallback() {
 			return findIgnoredCallback != null ? findIgnoredCallback : new BaseIgnoredCallback();
 		}
 
-		private FinderFindCallback toMatchedCallback() {
+		private FinderMatchedCallback toMatchedCallback() {
 			return findMatchedCallback != null ? findMatchedCallback : new BaseMatchedCallback();
 		}
-		
-		private FinderErrorHandler toFinderErrorHandler() {
-			return findErrorCallback != null ? findErrorCallback : new LoggingErrorHandler();
+
+		private FinderErrorCallback toErrorCallback() {
+			return findErrorCallback != null ? findErrorCallback : new LoggingErrorCallback();
 		}
 
-		private FinderFilter toFinderFilter(){
-			return new FinderFilter() {
-				private final Matcher<Class<?>> classMatcher = toClassMatcher();
-				private final Matcher<String> classNameMatcher = toClassNameMatcher();
-				private final Matcher<ClassPathResource> fileMatcher = toFileMatcher();
-				private final Matcher<ClassPathRoot> classPathMatcher = toClassPathMatcher();
-				
-				@Override
-				public boolean isIncludeResource(ClassPathResource resource) {
-					return fileMatcher.matches(resource);
-				}
-				
-				@Override
-				public boolean isIncludeDir(ClassPathResource resource) {
-					return true;//fileMatcher.matches(resource);
-				}
-				
-				@Override
-				public boolean isIncludeClassPath(ClassPathRoot root) {
-					return classPathMatcher.matches(root);
-				}
-				
-				@Override
-				public boolean isIncludeClassName(String className) {
-					return classNameMatcher.matches(className);
-				}
-				
-				@Override
-				public boolean isIncludeClass(Class<?> classToMatch) {
-					return classMatcher.matches(classToMatch);
-				}
-				
-				@Override
-				public boolean isIncludeArchive(ClassPathResource archiveFile) {
-					return fileMatcher.matches(archiveFile);
-				}
-			};
-		}		
-	}
-	
-	private static class LoggingErrorHandler implements FinderErrorHandler {
-		private final Logger logger;
+		private FinderFilter toFilter() {
+			return finderFilter != null ? finderFilter : new BaseFilter();
+		}	
 		
-		public LoggingErrorHandler(){
-			this(Logger.getLogger(LoggingErrorHandler.class));
+		public Builder copyOf(){
+			Builder copy = new Builder();
+			copy.classPathRoots.addAll(classPathRoots);
+			copy.findErrorCallback = findErrorCallback;
+			copy.findIgnoredCallback = findIgnoredCallback;
+			copy.findMatchedCallback = findMatchedCallback;
+			return copy;
 		}
 		
-		public LoggingErrorHandler(Logger logger){
-			this.logger = checkNotNull(logger, "expect logger");
-		}
+		public Builder setSearchClassPaths(ClassPathBuilder builder) {
+			setSearchClassPaths(builder.build());
+        	return this;
+        }
 		
-		@Override
-		public void onResourceError(ClassPathResource resource, Exception e) {
-			logger.warn("error handling resource " + resource,e);
-		}
+		public Builder setSearchClassPaths(Iterable<ClassPathRoot> roots) {
+			classPathRoots.addAll(newArrayList(roots));
+        	return this;
+        }
 		
-		@Override
-		public void onClassError(String fullClassname, Exception e) {
-			logger.warn("error handling class " + fullClassname,e);
-		}
-		
-		@Override
-		public void onArchiveError(ClassPathResource archive, Exception e) {
-			logger.warn("error handling archive " + archive,e);
-		}
-		
-	}
-	public static class BaseErrorHandler implements FinderErrorHandler {
-
-		@Override
-        public void onResourceError(ClassPathResource resource, Exception e) {
+		public Builder setMatchedCallback(FinderMatchedCallback callback) {
+        	this.findMatchedCallback = callback;
+        	return this;
         }
 
-		@Override
-        public void onClassError(String fullClassname, Exception e) {
-        }
-
-		@Override
-        public void onArchiveError(ClassPathResource archive, Exception e) {
-        }
-	}
-	
-	public static class BaseMatchedCallback implements FinderFindCallback {
-		@Override
-		public void onArchiveMatched(ClassPathResource archiveFile) {
+		public Builder setIgnoredCallback(FinderIgnoredCallback callback) {
+        	this.findIgnoredCallback = callback;
+        	return this;
 		}
 
-		@Override
-		public void onResourceMatched(ClassPathResource resource) {
+		public Builder setErrorCallback(FinderErrorCallback callback) {
+        	this.findErrorCallback = callback;
+        	return this;
 		}
-
-		@Override
-		public void onClassNameMatched(String className) {
+		
+		public Builder setFilter(FinderFilter filter) {
+        	this.finderFilter = filter;
+        	return this;
 		}
-
-		@Override
-		public void onClassPath(ClassPathRoot root) {
+		
+		public Builder setClassLoader(ClassLoader classLoader) {
+        	this.classLoader = classLoader;
+        	return this;
 		}
-
-		@Override
-		public void onClassMatched(Class<?> matchedClass) {
+		
+		public Builder setSwallowErrors(){
+			this.findErrorCallback = new BaseErrorCallback();
+			return this;
 		}
 	}
-	
-	public static class BaseIgnoredCallback implements FinderIgnoredCallback {
-
-		@Override
-        public void onArchiveIgnored(ClassPathResource archiveFile) {
-        }
-
-		@Override
-        public void onResourceIgnored(ClassPathResource resource) {
-        }
-
-		@Override
-        public void onClassNameIgnored(String className) {
-        }
-
-		@Override
-        public void onClassIgnored(Class<?> matchedClass) {
-        }
-
-		@Override
-        public void onClassPathIgnored(ClassPathRoot root) {
-        }
-	}
-
-	public static class LoggingMatchedCallback implements FinderFindCallback {
-		private final Logger logger;
-		
-		public LoggingMatchedCallback(){
-			this(Logger.getLogger(LoggingMatchedCallback.class));
-		}
-		
-		public LoggingMatchedCallback(Logger logger){
-			this.logger = checkNotNull(logger, "expect logger");
-		}
-		
-		@Override
-		public void onArchiveMatched(ClassPathResource archiveFile) {
-			logger.info("matched archive:" + archiveFile);
-		}
-
-		@Override
-		public void onResourceMatched(ClassPathResource resource) {
-			logger.info("matched resource:" + resource);
-		}
-
-		@Override
-		public void onClassNameMatched(String className) {
-			logger.info("matched className:" + className);
-		}
-
-		@Override
-		public void onClassPath(ClassPathRoot root) {
-			logger.info("matched class path root:" + root);
-		}
-
-		@Override
-		public void onClassMatched(Class<?> matchedClass) {
-			logger.info("matched class:" + matchedClass.getName());
-		}
-	}
-	
-	public static class LoggingIgnoredCallback implements FinderIgnoredCallback {
-		private final Logger logger;
-		
-		public LoggingIgnoredCallback(){
-			this(Logger.getLogger(LoggingErrorHandler.class));
-		}
-		
-		public LoggingIgnoredCallback(Logger logger){
-			this.logger = checkNotNull(logger, "expect logger");
-		}
-		
-		@Override
-        public void onArchiveIgnored(ClassPathResource archiveFile) {
-			logger.info("ignoring archive:" + archiveFile);
-        }
-
-		@Override
-        public void onResourceIgnored(ClassPathResource resource) {
-			logger.info("ignoring resource:" + resource);
-		}
-
-		@Override
-        public void onClassNameIgnored(String className) {
-			logger.info("ignoring class named:" + className);
-		}
-
-		@Override
-        public void onClassIgnored(Class<?> ignoredClass) {
-			logger.info("ignoring class:" + ignoredClass.getName());
-			
-		}
-
-		@Override
-        public void onClassPathIgnored(ClassPathRoot root) {
-			logger.info("ignoring class path:" + root);
-		}
-	}
-		
-	
-	public static class BaseFilter implements FinderFilter {
-
-		@Override
-        public boolean isIncludeClassPath(ClassPathRoot root) {
-	        return true;
-        }
-
-		@Override
-        public boolean isIncludeDir(ClassPathResource resourceh) {
-	        return true;
-        }
-
-		@Override
-        public boolean isIncludeResource(ClassPathResource resource) {
-	        return true;
-        }
-
-		@Override
-        public boolean isIncludeClassName(String className) {
-	        return true;
-        }
-
-		@Override
-        public boolean isIncludeClass(Class<?> classToMatch) {
-	        return true;
-        }
-
-		@Override
-        public boolean isIncludeArchive(ClassPathResource archiveFile) {
-	        return true;
-        }
-
-
-	}
-	
 }
