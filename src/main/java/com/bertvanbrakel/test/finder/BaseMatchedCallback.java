@@ -16,7 +16,7 @@ public class BaseMatchedCallback implements FinderMatchedCallback {
 	}
 
 	@Override
-	public void onClassPathMatched(ClassPathRoot root) {
+	public void onClassPathMatched(Root root) {
 	}
 
 	@Override

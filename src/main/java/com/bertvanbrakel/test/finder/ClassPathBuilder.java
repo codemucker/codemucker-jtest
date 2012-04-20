@@ -11,13 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.bertvanbrakel.test.finder.ClassPathRoot.TYPE;
+import com.bertvanbrakel.test.finder.Root.TYPE;
 import com.bertvanbrakel.test.util.ProjectFinder;
 import com.bertvanbrakel.test.util.ProjectResolver;
 
 public class ClassPathBuilder {
 	
-	private final Map<String,ClassPathRoot> classPathsRoots = newLinkedHashMap();
+	private final Map<String,Root> classPathsRoots = newLinkedHashMap();
 	
 	private ProjectResolver projectResolver;
 
@@ -35,7 +35,7 @@ public class ClassPathBuilder {
 		//prevent instantiation outside of builder method
 	}
 	
-	public List<ClassPathRoot> build(){
+	public List<Root> build(){
 		ProjectResolver resolver = toResolver();
 		
 		ClassPathBuilder copy = new ClassPathBuilder();
@@ -124,14 +124,14 @@ public class ClassPathBuilder {
     	return this;
     }
 
-	public ClassPathBuilder addClassPaths(Iterable<ClassPathRoot> roots) {
-		for(ClassPathRoot root:roots){
+	public ClassPathBuilder addClassPaths(Iterable<Root> roots) {
+		for(Root root:roots){
 			addClassPath(root);
 		}
 		return this;
 	}
 	
-	public ClassPathBuilder addClassPath(ClassPathRoot root) {
+	public ClassPathBuilder addClassPath(Root root) {
 		String key = root.getPathName();
 		if (root.isTypeKnown() || !classPathsRoots.containsKey(key)) {
 			classPathsRoots.put(key, root);

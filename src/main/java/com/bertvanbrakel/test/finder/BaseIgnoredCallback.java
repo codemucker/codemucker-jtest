@@ -21,7 +21,7 @@ public class BaseIgnoredCallback implements FinderIgnoredCallback {
     }
 
 	@Override
-    public void onClassPathIgnored(ClassPathRoot root) {
+    public void onClassPathIgnored(Root root) {
     }
 
 	@Override

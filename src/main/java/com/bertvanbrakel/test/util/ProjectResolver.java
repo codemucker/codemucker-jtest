@@ -8,6 +8,8 @@ public interface ProjectResolver {
 
 	File getBaseDir();
 
+	File getTmpDir();
+	
 	Collection<File> getMainSrcDirs();
 
 	Collection<File> getMainResourceDirs();
@@ -25,4 +27,6 @@ public interface ProjectResolver {
 	Collection<File> getTestCompileTargetDirs();
 
 	Collection<File> getGeneratedCompileTargetDirs();
+
+	
 }

@@ -5,7 +5,7 @@ import com.bertvanbrakel.test.finder.ClassFinder.FinderFilter;
 public class BaseFilter implements FinderFilter {
 
 	@Override
-    public boolean isIncludeClassPath(ClassPathRoot root) {
+    public boolean isIncludeClassPath(Root root) {
         return true;
     }
 

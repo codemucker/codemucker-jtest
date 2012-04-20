@@ -12,8 +12,6 @@ import com.bertvanbrakel.test.util.TestHelper;
 
 public class ClasspathResourceTest {
 
-	private final boolean NOT_ARCHIVE = false;
-
 	TestHelper helper = new TestHelper();
 	
 	private ClassPathResource newResource(String relPath) {
@@ -27,7 +25,7 @@ public class ClasspathResourceTest {
         	resourceFile.getParentFile().mkdirs();
         	resourceFile.createNewFile();
         	resourceFile.deleteOnExit();
-        	return new ClassPathResource(new ClassPathRoot(rootDir), resourceFile, relPath, NOT_ARCHIVE);
+        	return new ClassPathResource(new ClassPathRoot(rootDir), relPath);
     	} catch (IOException e) {
     		throw new RuntimeException("Error creating tmp resource path " + relPath + " in " + rootDir.getAbsolutePath(), e);
     	}

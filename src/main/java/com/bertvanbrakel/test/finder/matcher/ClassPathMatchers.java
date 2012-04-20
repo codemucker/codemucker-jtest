@@ -3,25 +3,25 @@ package com.bertvanbrakel.test.finder.matcher;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.bertvanbrakel.test.finder.ClassPathResource;
-import com.bertvanbrakel.test.finder.ClassPathRoot;
+import com.bertvanbrakel.test.finder.Root;
 
 public class ClassPathMatchers extends LogicalMatchers {
 	
     @SuppressWarnings("unchecked")
-    public static Matcher<ClassPathRoot> any() {
+    public static Matcher<Root> any() {
     	return LogicalMatchers.any();
     }
     
     @SuppressWarnings("unchecked")
-    public static Matcher<ClassPathRoot> none() {
+    public static Matcher<Root> none() {
     	return LogicalMatchers.none();
     }
  
-    public static Matcher<ClassPathRoot> resource(Matcher<ClassPathResource> matcher) {
+    public static Matcher<Root> resource(Matcher<ClassPathResource> matcher) {
     	return new ResourcMatchereAdapter(matcher);
     }
     
-    private static class ResourcMatchereAdapter implements Matcher<ClassPathRoot> {
+    private static class ResourcMatchereAdapter implements Matcher<Root> {
 
     	private final Matcher<ClassPathResource> delegate;
     	
@@ -30,8 +30,8 @@ public class ClassPathMatchers extends LogicalMatchers {
     	}
     	
 		@Override
-        public boolean matches(ClassPathRoot root) {
-			ClassPathResource cpr = new ClassPathResource(root, root.getPath(), root.getPathName(), false);
+        public boolean matches(Root root) {
+			ClassPathResource cpr = new ClassPathResource(root, root.getPathName());
 			return delegate.matches(cpr);
         }
     	

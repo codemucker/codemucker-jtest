@@ -1,38 +1,35 @@
 package com.bertvanbrakel.test.finder.matcher;
 
+import static com.bertvanbrakel.test.finder.matcher.LogicalMatchers.all;
+import static com.bertvanbrakel.test.finder.matcher.LogicalMatchers.any;
+import static com.bertvanbrakel.test.finder.matcher.LogicalMatchers.not;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collection;
 
-import com.bertvanbrakel.test.finder.matcher.LogicalMatchers;
-import com.bertvanbrakel.test.finder.matcher.Matcher;
-
 public final class IncludeExcludeMatcherBuilder<T> {
 
 	private final Collection<Matcher<T>> excludes = newArrayList();
-	private final Collection<Matcher<T>> includes= newArrayList();
+	private final Collection<Matcher<T>> includes = newArrayList();
 	
-	public static <T> IncludeExcludeMatcherBuilder<T> newBuilder(){
+	public static <T> IncludeExcludeMatcherBuilder<T> newBuilder() {
 		return new IncludeExcludeMatcherBuilder<T>();
 	}
-	
+
 	@SuppressWarnings("unchecked")
     public Matcher<T> build(){
-		if( includes.size() > 0 && excludes.size() > 0) {
-			return LogicalMatchers.all(
-					LogicalMatchers.any(includes)
-					, LogicalMatchers.not(LogicalMatchers.all(excludes))
-			);	
-		} else if( excludes.size() > 0){
-			return LogicalMatchers.not(LogicalMatchers.any(excludes));
-		} else if( includes.size() > 0){
-			return LogicalMatchers.any(includes);
+		if (includes.size() > 0 && excludes.size() > 0) {
+			return all(not(all(excludes)), any(includes));
+		} else if (excludes.size() > 0) {
+			return not(any(excludes));
+		} else if (includes.size() > 0) {
+			return any(includes);
 		} else {
-			return LogicalMatchers.any();
+			return any();
 		}
 	}
 	
-	public IncludeExcludeMatcherBuilder<T> copyOf(){
+	public IncludeExcludeMatcherBuilder<T> copyOf() {
 		IncludeExcludeMatcherBuilder<T> copy = new IncludeExcludeMatcherBuilder<T>();
 		copy.includes.addAll(includes);
 		copy.excludes.addAll(excludes);
@@ -88,7 +85,7 @@ public final class IncludeExcludeMatcherBuilder<T> {
 	}
 	
 	private static <T> void addAll(Collection<T> col, Iterable<T> iter){
-		for( T item:iter){
+		for (T item : iter) {
 			col.add(item);
 		}
 	}

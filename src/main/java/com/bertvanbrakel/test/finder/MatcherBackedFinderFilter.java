@@ -7,7 +7,7 @@ import com.bertvanbrakel.test.finder.matcher.Matcher;
 
 public class MatcherBackedFinderFilter implements FinderFilter {
 	
-	private final Matcher<ClassPathRoot> classPathMatcher;
+	private final Matcher<Root> classPathMatcher;
 	private final Matcher<ClassPathResource> resourceMatcher;
 	private final Matcher<String> classNameMatcher;
 	private final Matcher<Class<?>> classMatcher;
@@ -17,7 +17,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 	}
 	
 	private MatcherBackedFinderFilter(
-			Matcher<ClassPathRoot> classPathMatcher
+			Matcher<Root> classPathMatcher
 			, Matcher<ClassPathResource> resourceMatcher
 			, Matcher<String> resourceNameMatcher
 			, Matcher<String> classNameMatcher
@@ -45,7 +45,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 	}
 	
 	@Override
-	public boolean isIncludeClassPath(ClassPathRoot root) {
+	public boolean isIncludeClassPath(Root root) {
 		return classPathMatcher.matches(root);
 	}
 	
@@ -70,7 +70,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
     }
 	
 	public static class Builder {
-		private Matcher<ClassPathRoot> classPathMatcher;
+		private Matcher<Root> classPathMatcher;
 		private Matcher<ClassPathResource> resourceMatcher;
 		private Matcher<String> resourceNameMatcher;
 		private Matcher<String> classNameMatcher;
@@ -91,7 +91,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
         	return this;
         }
 
-		public MatcherBackedFinderFilter.Builder setClassPathMatcher(Matcher<ClassPathRoot> classPathMatcher) {
+		public MatcherBackedFinderFilter.Builder setClassPathMatcher(Matcher<Root> classPathMatcher) {
         	this.classPathMatcher = classPathMatcher;
         	return this;
         }

@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.UUID;
 
 import com.bertvanbrakel.test.finder.ClassFinderException;
 import com.google.common.collect.ImmutableSet;
@@ -93,6 +94,12 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 		}
 		return targetDir;
 	}
+
+	@Override
+    public File getTmpDir() {
+	    return findInProjectDir("target/tmp", true);
+    }
+	
 	
 	private File findInProjectDir(String relativeDir, boolean createIfNotFound){
 		File projectDir = getBaseDir();

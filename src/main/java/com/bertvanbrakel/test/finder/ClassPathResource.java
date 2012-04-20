@@ -1,25 +1,29 @@
 package com.bertvanbrakel.test.finder;
 
-import java.io.File;
+import static com.google.common.base.Preconditions.checkNotNull;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 
 import com.google.common.base.Objects;
 
 public class ClassPathResource  {
 
-	private final ClassPathRoot classPathRoot;
-	private final File file;
+	private final Root root;
+//	private final File file;
 	private final String relPath;
 	private final int depth;
 	private final boolean fromArchive;
-	
-	public ClassPathResource(ClassPathRoot classPathRoot, File file, String relPath, boolean fromArchive) {
-		this.classPathRoot = classPathRoot;
-		this.file = file;
-		this.relPath = relPath;
+
+	public ClassPathResource(Root root, String relPath) {
+		this.root = checkNotNull(root,"expect class path root");
+		this.relPath = checkNotNull(relPath,"expect relative path");
 		this.depth = countForwardSlashes(relPath);
-		this.fromArchive = fromArchive;
+		this.fromArchive = root.isArchive();
 	}
 	
 	private static int countForwardSlashes(String s){
@@ -32,12 +36,38 @@ public class ClassPathResource  {
 		return count;
 	}
 
-	public File getFile() {
-		return file;
+//	/**
+//	 * @deprecated to be removed at some stage. Access should be via the class path root? To 
+//	 * Allow dynamic creation of resources
+//	 */
+//	@Deprecated
+//	public File getFile() {
+//		return file;
+//	}
+	
+	public InputStream getInputStream() throws IOException{
+		return root.getResourceInputStream(relPath);
 	}
 	
-	public ClassPathRoot getClassPathRoot() {
-		return classPathRoot;
+	public String readAsString() throws IOException{
+		return readAsString("utf8");
+	}
+	
+	public String readAsString(String encoding) throws IOException{
+		InputStream is  = null;
+		try {
+			is = root.getResourceInputStream(relPath);
+			return IOUtils.toString(is,encoding);
+		} finally {
+			IOUtils.closeQuietly(is);
+		}
+	}
+	public OutputStream getOutputStream() throws IOException{
+		return root.getResourceOutputStream(relPath);
+	}
+	
+	public Root getRoot() {
+		return root;
 	}
 
 	public int getDepth() {
@@ -45,7 +75,7 @@ public class ClassPathResource  {
     }
 	
 	public boolean isDir(){
-		return file != null && file.isDirectory();
+		return relPath.endsWith("/");
 	}
 	
 	public boolean isArchiveEntry(){
@@ -96,7 +126,7 @@ public class ClassPathResource  {
 	public String toString(){
 		return Objects
 			.toStringHelper(this)
-			.add("classPathRoot", classPathRoot)
+			.add("classPathRoot", root)
 			.add("relPath", relPath)
 			.add("depth",depth)
 			.add("extension",getExtension())

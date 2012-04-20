@@ -25,7 +25,7 @@ public class ClassFinder {
 	
 	public static interface FinderFilter {
 		public boolean isInclude(Object obj);
-		public boolean isIncludeClassPath(ClassPathRoot root);
+		public boolean isIncludeClassPath(Root root);
 		public boolean isIncludeDir(ClassPathResource resource);
 		public boolean isIncludeResource(ClassPathResource resource);
 		public boolean isIncludeClassName(String className);
@@ -35,7 +35,7 @@ public class ClassFinder {
 	
 	public static interface FinderMatchedCallback {
 		public void onMatched(Object obj);
-		public void onClassPathMatched(ClassPathRoot matchedRoot);
+		public void onClassPathMatched(Root matchedRoot);
 		public void onResourceMatched(ClassPathResource matchedResource);
 		public void onArchiveMatched(ClassPathResource matchedArchive);
 		public void onClassNameMatched(String matchedClassName);
@@ -44,7 +44,7 @@ public class ClassFinder {
 
 	public static interface FinderIgnoredCallback {
 		public void onIgnored(Object obj);
-		public void onClassPathIgnored(ClassPathRoot ignoredRoot);
+		public void onClassPathIgnored(Root ignoredRoot);
 		public void onResourceIgnored(ClassPathResource ignoredResource);
 		public void onArchiveIgnored(ClassPathResource ignoredArchive);
 		public void onClassNameIgnored(String ignoredClassName);
@@ -76,7 +76,7 @@ public class ClassFinder {
 	
 	private static final Collection<String> DEFAULT_ARCHIVE_TYPES = ImmutableSet.of("jar", "war", "zip", "ear");
 	
-	private final List<ClassPathRoot> classPathRoots;
+	private final List<Root> classPathRoots;
 	private final ClassLoader classLoader;
 	private final FinderFilter filter;
 	private final FinderErrorCallback errorHandler;
@@ -132,7 +132,7 @@ public class ClassFinder {
 //	}
 
 	private ClassFinder(
-			List<ClassPathRoot> classPathRoots
+			List<Root> classPathRoots
 			, FinderFilter filter
 			, ClassLoader classLoader
 			, FinderErrorCallback errorHandler
@@ -147,10 +147,10 @@ public class ClassFinder {
 		this.matchedCallback = checkNotNull(matchedCallback,"expect matchedCallback");	
 	}
 
-	private List<ClassPathRoot> cleanAndCheckRoots(Iterable<ClassPathRoot> roots){
+	private List<Root> cleanAndCheckRoots(Iterable<Root> roots){
 		checkNotNull(roots,"expect class path roots to search");
-		Map<String, ClassPathRoot> map = newLinkedHashMap();
-		for( ClassPathRoot root:roots){
+		Map<String, Root> map = newLinkedHashMap();
+		for( Root root:roots){
 			String key = root.getPathName();
 			if( root.isTypeKnown() || !map.containsKey(key) ){
 				map.put(key, root);
@@ -231,22 +231,30 @@ public class ClassFinder {
 		return findResources(classPathRoots);
 	}
 	
-	private Collection<ClassPathResource> findResources(Collection<ClassPathRoot> rootClassPathEntries){
+	//todo:the nested if's are bit messy
+	private Collection<ClassPathResource> findResources(Collection<Root> rootClassPathEntries){
     	Collection<ClassPathResource> resources = newArrayList();
-    	for (ClassPathRoot root : rootClassPathEntries) {
+    	//TODO:clean this up. Double checking archive types. Probably should move that into sep class
+    	//and also split dir/archive roots and do this at classpath parsing
+    	for (Root root : rootClassPathEntries) {
     		if(filter.isInclude(root) && filter.isIncludeClassPath(root)){
     			matchedCallback.onMatched(root);
     			matchedCallback.onClassPathMatched(root);
         		if( root.isDirectory()){
-        			walkResourceDir(resources, root);
-        		} else {
+        			//TODO:hack, shouldn't be casting! let the root decide how to walk entries!
+        			walkResourceDir(resources, (ClassPathRoot)root);
+        		} else if(root.isArchive()){
+        			//TODO:shouldn't cast! let the root do the walking!
         			String extension = FilenameUtils.getExtension(root.getPathName());
         			if( archiveTypes.contains(extension)){
-        				walkArchiveEntries(resources, root, root.getPath());
+        				internalWalkArchive(resources, root,  ((ClassPathRoot)root).getPath());
         			} else {
         				ignoredCallback.onIgnored(root);
         				ignoredCallback.onClassPathIgnored(root);
         			}
+        		} else {
+    				ignoredCallback.onIgnored(root);
+        			ignoredCallback.onClassPathIgnored(root);
         		}
     		} else {
 				ignoredCallback.onIgnored(root);
@@ -255,20 +263,8 @@ public class ClassFinder {
     	}
     	return resources;
 	}
-	
-	public void walkArchiveEntries(Collection<ClassPathResource> found, ClassPathRoot root, File archive) {
-		ClassPathResource resource = new ClassPathResource(root, archive, "", false);
-		if (filter.isInclude(resource) && filter.isIncludeArchive(resource)) {
-			matchedCallback.onMatched(resource);
-			matchedCallback.onArchiveMatched(resource);
-			internalWalkArchive(found,root, archive);
-		} else {
-			ignoredCallback.onIgnored(resource);
-			ignoredCallback.onArchiveIgnored(resource);
-		}
-	}
 
-	private void internalWalkArchive(Collection<ClassPathResource> found, ClassPathRoot root, File zipFile){
+	private void internalWalkArchive(Collection<ClassPathResource> found, Root root, File zipFile){
 		ZipFile zip;
 		try {
 			zip = new ZipFile(zipFile);
@@ -279,7 +275,7 @@ public class ClassFinder {
 		}
 
 		try {
-			walkZipEntries(found, root, zipFile, zip);
+			internalWalkZipEntries(found, root, zipFile, zip);
 		} finally {
 			try {
 	            zip.close();
@@ -289,14 +285,14 @@ public class ClassFinder {
 		}
 	}
 	
-	private void walkZipEntries(Collection<ClassPathResource> found, ClassPathRoot root, File zipFile, ZipFile zip){
+	private void internalWalkZipEntries(Collection<ClassPathResource> found, Root root, File zipFile, ZipFile zip){
 		Enumeration<? extends ZipEntry> entries = zip.entries();
 		while(entries.hasMoreElements()){
 			ZipEntry entry = entries.nextElement();
 			if( !entry.isDirectory()){
 				String name = entry.getName();
 				name = ensureStartsWithSlash(name);
-				ClassPathResource zipResourceEntry = new ClassPathResource(root, zipFile, name, true);
+				ClassPathResource zipResourceEntry = new ClassPathResource(root, name);
 				if(filter.isInclude(zipResourceEntry) && filter.isIncludeResource(zipResourceEntry)){
 					matchedCallback.onMatched(zipResourceEntry);
 					matchedCallback.onResourceMatched(zipResourceEntry);
@@ -320,8 +316,8 @@ public class ClassFinder {
 		walkDir(found, root, "", root.getPath());
 	}
 	
-	private void walkDir(Collection<ClassPathResource> found, ClassPathRoot rootDir, String parentPath, File dir) {
-		ClassPathResource dirResource = new ClassPathResource(rootDir, dir, parentPath + "/", false);
+	private void walkDir(Collection<ClassPathResource> found, Root rootDir, String parentPath, File dir) {
+		ClassPathResource dirResource = new ClassPathResource(rootDir, parentPath + "/");
 		if (!filter.isIncludeDir(dirResource)) {
 			ignoredCallback.onResourceIgnored(dirResource);
 			return;
@@ -329,7 +325,7 @@ public class ClassFinder {
 		File[] files = dir.listFiles(FILE_FILTER);
 		for (File f : files) {
 			String relPath = parentPath + "/" + f.getName();
-			ClassPathResource child = new ClassPathResource(rootDir, f, relPath, false);
+			ClassPathResource child = new ClassPathResource(rootDir, relPath);
 			if (filter.isInclude(child) && filter.isIncludeResource(child)) {
 				matchedCallback.onMatched(child);
 				matchedCallback.onResourceMatched(child);
@@ -352,7 +348,7 @@ public class ClassFinder {
 		private FinderErrorCallback findErrorCallback;
 		private FinderFilter finderFilter;
 		private ClassLoader classLoader;
-		private List<ClassPathRoot> classPathRoots = newArrayList();
+		private List<Root> classPathRoots = newArrayList();
 
 		public ClassFinder build(){
 			return new ClassFinder(
@@ -399,7 +395,7 @@ public class ClassFinder {
         	return this;
         }
 		
-		public Builder setSearchClassPaths(Iterable<ClassPathRoot> roots) {
+		public Builder setSearchClassPaths(Iterable<Root> roots) {
 			classPathRoots.addAll(newArrayList(roots));
         	return this;
         }

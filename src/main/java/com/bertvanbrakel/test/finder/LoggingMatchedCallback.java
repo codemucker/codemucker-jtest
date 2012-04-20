@@ -33,7 +33,7 @@ public class LoggingMatchedCallback implements FinderMatchedCallback {
 	}
 
 	@Override
-	public void onClassPathMatched(ClassPathRoot root) {
+	public void onClassPathMatched(Root root) {
 		logger.info("matched class path root:" + root);
 	}
 

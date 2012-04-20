@@ -39,7 +39,7 @@ public class LoggingIgnoredCallback implements FinderIgnoredCallback {
 	}
 
 	@Override
-    public void onClassPathIgnored(ClassPathRoot root) {
+    public void onClassPathIgnored(Root root) {
 		logger.info("ignoring class path:" + root);
 	}
 
