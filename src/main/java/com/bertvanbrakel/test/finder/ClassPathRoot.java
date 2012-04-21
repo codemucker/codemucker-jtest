@@ -48,8 +48,12 @@ public class ClassPathRoot implements Root {
 		} else if( isDirectory()){
 			//TODO:check relPath is in the given directory, no escaping up!
 			File f = new File(path.getAbsolutePath(),relPath);
+			if( !f.exists()){
+				f.getParentFile().mkdirs();
+				f.createNewFile();
+			}
 			if( !f.canWrite()){
-				throw new FileNotFoundException(String.format("Don't have permission to write file '%s' in dir '%s' for root %s",relPath,path.getAbsolutePath(),this));
+				throw new FileNotFoundException(String.format("Don't have permission to write file '%s' in dir '%s' for root %s. Full path %s",relPath,path.getAbsolutePath(),this, f.getAbsolutePath()));
 			}
 			if( !f.exists()){
 				f.getParentFile().mkdir();
