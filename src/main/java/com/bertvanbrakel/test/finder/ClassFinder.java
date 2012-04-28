@@ -3,23 +3,13 @@ package com.bertvanbrakel.test.finder;
 import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.google.common.collect.Maps.newLinkedHashMap;
-import static com.google.common.collect.Sets.newHashSet;
 
-import java.io.File;
-import java.io.FileFilter;
-import java.io.IOException;
 import java.util.Collection;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipException;
-import java.util.zip.ZipFile;
-
-import org.apache.commons.io.FilenameUtils;
 
 import com.bertvanbrakel.test.util.ClassNameUtil;
-import com.google.common.collect.ImmutableSet;
+import com.google.common.base.Function;
 
 public class ClassFinder {
 	
@@ -58,32 +48,12 @@ public class ClassFinder {
 		public void onClassError(String fullClassname, Exception e);
 	}
 	
-	private static FileFilter DIR_FILTER = new FileFilter() {
-		private static final char HIDDEN_DIR_PREFIX = '.';//like .git, .svn,....
-		
-		@Override
-		public boolean accept(File dir) {
-			return dir.isDirectory() && dir.getName().charAt(0) != HIDDEN_DIR_PREFIX && !dir.getName().equals("CVS");
-		}
-	};
-	
-	private static FileFilter FILE_FILTER = new FileFilter() {
-		@Override
-		public boolean accept(File f) {
-			return f.isFile();
-		}
-	};
-	
-	private static final Collection<String> DEFAULT_ARCHIVE_TYPES = ImmutableSet.of("jar", "war", "zip", "ear");
-	
 	private final List<Root> classPathRoots;
 	private final ClassLoader classLoader;
 	private final FinderFilter filter;
 	private final FinderErrorCallback errorHandler;
 	private final FinderIgnoredCallback ignoredCallback;
 	private final FinderMatchedCallback matchedCallback;
-	private final Collection<String> archiveTypes = newHashSet(DEFAULT_ARCHIVE_TYPES);
-	
 
 	public static Builder newBuilder(){
 		return new Builder();
@@ -92,44 +62,6 @@ public class ClassFinder {
 	public static Criteria newCriteria(){
 		return new Criteria();
 	}
-	
-//	public static void main(String[] args){
-//		
-//		FinderMatchedCallback callback = new BaseMatchedCallback(){
-//			private int classCount = 0;
-//
-//			@Override
-//            public void onMatched(Object obj) {
-//				System.out.println( "matched:" + obj);
-//            }
-//
-//			@Override
-//            public void onClassMatched(Class<?> matchedClass) {
-//				System.out.println( classCount + " class:" + matchedClass.getName());
-//				classCount++;
-//			}
-//		};
-//		
-////		ClassFinder finder = ClassFinder
-////				.newBuilder()
-////					//.setClassMatcher(ClassMatchers.all(ClassMatchers.excludeEnum(),ClassMatchers.includeInterfaces()))
-////					//.setIncludeProjectCompileDir()
-////					.setCallbackOnMatched(callback)
-////					.setSwallowErrors()
-////					.build();
-//		ClassFinder finder = ClassFinder
-//				.newCriteria()
-//					//.setMatchCallback(ClassMatchers.all(ClassMatchers.excludeEnum(),ClassMatchers.includeInterfaces()))
-//					.setIncludeClassesDir(true)
-//					.setMatchCallback(callback)
-//					//.setSwallowErrors()
-//					
-//					.build();
-//			
-//		System.out.println("starting");
-//		finder.findClasses();
-//		System.out.println("done!");
-//	}
 
 	private ClassFinder(
 			List<Root> classPathRoots
@@ -233,29 +165,16 @@ public class ClassFinder {
 	
 	//todo:the nested if's are bit messy
 	private Collection<ClassPathResource> findResources(Collection<Root> rootClassPathEntries){
-    	Collection<ClassPathResource> resources = newArrayList();
+    	final Collection<ClassPathResource> resources = newArrayList();
     	//TODO:clean this up. Double checking archive types. Probably should move that into sep class
     	//and also split dir/archive roots and do this at classpath parsing
     	for (Root root : rootClassPathEntries) {
     		if(filter.isInclude(root) && filter.isIncludeClassPath(root)){
     			matchedCallback.onMatched(root);
     			matchedCallback.onClassPathMatched(root);
-        		if( root.isDirectory()){
-        			//TODO:hack, shouldn't be casting! let the root decide how to walk entries!
-        			walkResourceDir(resources, (ClassPathRoot)root);
-        		} else if(root.isArchive()){
-        			//TODO:shouldn't cast! let the root do the walking!
-        			String extension = FilenameUtils.getExtension(root.getPathName());
-        			if( archiveTypes.contains(extension)){
-        				internalWalkArchive(resources, root,  ((ClassPathRoot)root).getPath());
-        			} else {
-        				ignoredCallback.onIgnored(root);
-        				ignoredCallback.onClassPathIgnored(root);
-        			}
-        		} else {
-    				ignoredCallback.onIgnored(root);
-        			ignoredCallback.onClassPathIgnored(root);
-        		}
+
+    			collectRootResorces(root, resources);
+
     		} else {
 				ignoredCallback.onIgnored(root);
     			ignoredCallback.onClassPathIgnored(root);
@@ -263,82 +182,23 @@ public class ClassFinder {
     	}
     	return resources;
 	}
-
-	private void internalWalkArchive(Collection<ClassPathResource> found, Root root, File zipFile){
-		ZipFile zip;
-		try {
-			zip = new ZipFile(zipFile);
-		} catch (ZipException e) {
-			throw new ClassFinderException("Error opening archive file:" + zipFile.getAbsolutePath(), e);
-		} catch (IOException e) {
-			throw new ClassFinderException("Error opening archive file:" + zipFile.getAbsolutePath(), e);
-		}
-
-		try {
-			internalWalkZipEntries(found, root, zipFile, zip);
-		} finally {
-			try {
-	            zip.close();
-            } catch (IOException e) {
-            	//ignore
-            }
-		}
-	}
 	
-	private void internalWalkZipEntries(Collection<ClassPathResource> found, Root root, File zipFile, ZipFile zip){
-		Enumeration<? extends ZipEntry> entries = zip.entries();
-		while(entries.hasMoreElements()){
-			ZipEntry entry = entries.nextElement();
-			if( !entry.isDirectory()){
-				String name = entry.getName();
-				name = ensureStartsWithSlash(name);
-				ClassPathResource zipResourceEntry = new ClassPathResource(root, name);
-				if(filter.isInclude(zipResourceEntry) && filter.isIncludeResource(zipResourceEntry)){
-					matchedCallback.onMatched(zipResourceEntry);
-					matchedCallback.onResourceMatched(zipResourceEntry);
-					found.add(zipResourceEntry);
-				} else{
-					ignoredCallback.onIgnored(zipResourceEntry);
-					ignoredCallback.onResourceIgnored(zipResourceEntry);
+	private void collectRootResorces(Root root,final  Collection<ClassPathResource> found){
+		Function<ClassPathResource, Boolean> collector = new Function<ClassPathResource, Boolean>() {
+			@Override
+            public Boolean apply(ClassPathResource resource) {
+				if (filter.isInclude(resource) && filter.isIncludeResource(resource)) {
+					matchedCallback.onMatched(resource);
+					matchedCallback.onResourceMatched(resource);
+					found.add(resource);
+				} else {
+					ignoredCallback.onIgnored(resource);
+					ignoredCallback.onResourceIgnored(resource);
 				}
-			}
-		}
-	}
-
-	private static String ensureStartsWithSlash(String name) {
-	    if( !name.startsWith("/")){
-	    	name = "/" + name;
-	    }
-	    return name;
-    }
-
-	private void walkResourceDir(Collection<ClassPathResource> found, ClassPathRoot root) {
-		walkDir(found, root, "", root.getPath());
-	}
-	
-	private void walkDir(Collection<ClassPathResource> found, Root rootDir, String parentPath, File dir) {
-		ClassPathResource dirResource = new ClassPathResource(rootDir, parentPath + "/");
-		if (!filter.isIncludeDir(dirResource)) {
-			ignoredCallback.onResourceIgnored(dirResource);
-			return;
-		}
-		File[] files = dir.listFiles(FILE_FILTER);
-		for (File f : files) {
-			String relPath = parentPath + "/" + f.getName();
-			ClassPathResource child = new ClassPathResource(rootDir, relPath);
-			if (filter.isInclude(child) && filter.isIncludeResource(child)) {
-				matchedCallback.onMatched(child);
-				matchedCallback.onResourceMatched(child);
-				found.add(child);
-			} else {
-				ignoredCallback.onIgnored(child);
-				ignoredCallback.onResourceIgnored(child);
-			}
-		}
-		File[] childDirs = dir.listFiles(DIR_FILTER);
-		for (File childDir : childDirs) {
-			walkDir(found, rootDir, parentPath + "/" + childDir.getName(), childDir);
-		}
+				return true;
+            }
+		};
+		root.walkResources(collector);
 	}
 	
 	public static class Builder {

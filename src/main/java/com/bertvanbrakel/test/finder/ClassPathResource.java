@@ -14,16 +14,13 @@ import com.google.common.base.Objects;
 public class ClassPathResource  {
 
 	private final Root root;
-//	private final File file;
 	private final String relPath;
 	private final int depth;
-	private final boolean fromArchive;
 
 	public ClassPathResource(Root root, String relPath) {
 		this.root = checkNotNull(root,"expect class path root");
 		this.relPath = checkNotNull(relPath,"expect relative path");
 		this.depth = countForwardSlashes(relPath);
-		this.fromArchive = root.isArchive();
 	}
 	
 	private static int countForwardSlashes(String s){
@@ -36,23 +33,32 @@ public class ClassPathResource  {
 		return count;
 	}
 
-//	/**
-//	 * @deprecated to be removed at some stage. Access should be via the class path root? To 
-//	 * Allow dynamic creation of resources
-//	 */
-//	@Deprecated
-//	public File getFile() {
-//		return file;
-//	}
-	
-	public InputStream getInputStream() throws IOException{
+	/**
+	 * Return a stream to read this resource
+	 * @return
+	 * @throws IOException
+	 */
+	public InputStream getInputStream() throws IOException {
 		return root.getResourceInputStream(relPath);
 	}
 	
-	public String readAsString() throws IOException{
+	/**
+	 * Read this resource as a uf8 string
+	 * @return
+	 * @throws IOException
+	 */
+	public String readAsString() throws IOException {
 		return readAsString("utf8");
 	}
 	
+	/**
+	 * Read this resource as a string using the given encoding
+	 * @param encoding
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
+	//TODO:should we throw an unchecked exception here?
 	public String readAsString(String encoding) throws IOException{
 		InputStream is  = null;
 		try {
@@ -62,6 +68,12 @@ public class ClassPathResource  {
 			IOUtils.closeQuietly(is);
 		}
 	}
+	
+	/**
+	 * Return a stream to write to this resource
+	 * @return
+	 * @throws IOException
+	 */
 	public OutputStream getOutputStream() throws IOException{
 		return root.getResourceOutputStream(relPath);
 	}
@@ -73,14 +85,6 @@ public class ClassPathResource  {
 	public int getDepth() {
     	return depth;
     }
-	
-	public boolean isDir(){
-		return relPath.endsWith("/");
-	}
-	
-	public boolean isArchiveEntry(){
-		return fromArchive;
-	}
 	
 	public String getRelPath() {
 		return relPath;
@@ -122,6 +126,10 @@ public class ClassPathResource  {
 		return isDir()?null:FilenameUtils.getExtension(getRelPath());
 	}
 	
+	private boolean isDir(){
+		return relPath.endsWith("/");
+	}
+	
 	@Override
 	public String toString(){
 		return Objects
@@ -130,7 +138,6 @@ public class ClassPathResource  {
 			.add("relPath", relPath)
 			.add("depth",depth)
 			.add("extension",getExtension())
-			.add("fromArchive", isArchiveEntry())
 			.toString();	
 	}
 }

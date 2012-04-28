@@ -25,7 +25,7 @@ public class ClasspathResourceTest {
         	resourceFile.getParentFile().mkdirs();
         	resourceFile.createNewFile();
         	resourceFile.deleteOnExit();
-        	return new ClassPathResource(new ClassPathRoot(rootDir), relPath);
+        	return new ClassPathResource(new DirectoryRoot(rootDir), relPath);
     	} catch (IOException e) {
     		throw new RuntimeException("Error creating tmp resource path " + relPath + " in " + rootDir.getAbsolutePath(), e);
     	}

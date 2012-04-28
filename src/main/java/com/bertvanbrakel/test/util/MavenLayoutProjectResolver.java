@@ -6,7 +6,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.UUID;
 
 import com.bertvanbrakel.test.finder.ClassFinderException;
 import com.google.common.collect.ImmutableSet;
@@ -97,9 +96,8 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 
 	@Override
     public File getTmpDir() {
-	    return findInProjectDir("target/tmp", true);
+	    return findInProjectDir("target/tmp/", true);
     }
-	
 	
 	private File findInProjectDir(String relativeDir, boolean createIfNotFound){
 		File projectDir = getBaseDir();
@@ -108,11 +106,14 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 			return dir;
 		}
 		
-		if( !dir.exists() && createIfNotFound){
+		if(!dir.exists() && createIfNotFound){
 			boolean created = dir.mkdirs();
 			if (!created) {
 				throw new ClassFinderException("Couldn't create dir " + dir.getAbsolutePath());
 			}
+		}
+		if(!dir.isDirectory()){
+			throw new ClassFinderException("Couldn't create dir, is not a directory " + dir.getAbsolutePath());		
 		}
 		return dir;
 	}
