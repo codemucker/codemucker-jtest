@@ -1,3 +1,4 @@
+
 package com.bertvanbrakel.test.finder;
 
 import java.io.IOException;
@@ -23,7 +24,9 @@ public interface Root {
 	 * Return a stream to read the given relative stream from
 	 * @param relPath
 	 * @return
-	 * @throws IOException
+	 * @throws IOException if it was not possible to read from this stream. This could include
+	 * the given resource not existing, not having permission, or this root not supporting read
+	 * operations.
 	 */
 	InputStream getResourceInputStream(String relPath) throws IOException;
 	
@@ -32,7 +35,7 @@ public interface Root {
 	 * @param relPath
 	 * @return
 	 * @throws IOException if it was not possible to write to the given resource for any reason. This
-	 * could include not having permissions, this root does not support writing
+	 * could include not having permissions, this root not supporting writing.
 	 */
 	OutputStream getResourceOutputStream(String relPath) throws IOException;
 

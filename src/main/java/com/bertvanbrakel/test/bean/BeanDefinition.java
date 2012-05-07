@@ -15,6 +15,8 @@
  */
 package com.bertvanbrakel.test.bean;
 
+import static com.google.common.collect.Maps.newHashMap;
+
 import java.lang.reflect.Constructor;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,7 +29,7 @@ public class BeanDefinition {
 
 	private final Class<?> beanType;
 	private Constructor ctor;
-	private Map<String, PropertyDefinition> properties = new HashMap<String, PropertyDefinition>();
+	private Map<String, PropertyDefinition> properties = newHashMap();
 
 	public BeanDefinition(Class<?> type) {
 		this.beanType = type;
