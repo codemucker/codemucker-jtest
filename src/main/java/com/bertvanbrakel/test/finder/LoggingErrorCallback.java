@@ -18,7 +18,7 @@ public class LoggingErrorCallback implements FinderErrorCallback {
 	}
 	
 	@Override
-	public void onResourceError(ClassPathResource resource, Exception e) {
+	public void onResourceError(RootResource resource, Exception e) {
 		logger.warn("error handling resource " + resource,e);
 	}
 	
@@ -28,7 +28,7 @@ public class LoggingErrorCallback implements FinderErrorCallback {
 	}
 	
 	@Override
-	public void onArchiveError(ClassPathResource archive, Exception e) {
+	public void onArchiveError(RootResource archive, Exception e) {
 		logger.warn("error handling archive " + archive,e);
 	}
 

@@ -4,11 +4,11 @@ import com.bertvanbrakel.test.finder.ClassFinder.FinderMatchedCallback;
 
 public class BaseMatchedCallback implements FinderMatchedCallback {
 	@Override
-	public void onArchiveMatched(ClassPathResource archiveFile) {
+	public void onArchiveMatched(RootResource archiveFile) {
 	}
 
 	@Override
-	public void onResourceMatched(ClassPathResource resource) {
+	public void onResourceMatched(RootResource resource) {
 	}
 
 	@Override

@@ -78,5 +78,4 @@ public class ClassNameUtil {
 	public static String safeToClassName(Type type){
     	return type==null?null:type.getClass().getName();
     }
-
 }

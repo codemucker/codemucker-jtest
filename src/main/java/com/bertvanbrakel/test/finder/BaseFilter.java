@@ -10,12 +10,12 @@ public class BaseFilter implements FinderFilter {
     }
 
 	@Override
-    public boolean isIncludeDir(ClassPathResource resourceh) {
+    public boolean isIncludeDir(RootResource resourceh) {
         return true;
     }
 
 	@Override
-    public boolean isIncludeResource(ClassPathResource resource) {
+    public boolean isIncludeResource(RootResource resource) {
         return true;
     }
 
@@ -30,7 +30,7 @@ public class BaseFilter implements FinderFilter {
     }
 
 	@Override
-    public boolean isIncludeArchive(ClassPathResource archiveFile) {
+    public boolean isIncludeArchive(RootResource archiveFile) {
         return true;
     }
 

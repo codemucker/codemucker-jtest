@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 /**
@@ -37,14 +36,16 @@ public class DirectoryRoot implements Root {
 	
 	private final File path;
 	private final RootType type;
+	private final RootContentType contentType;
 	
 	public DirectoryRoot(File path){
-		this(path,RootType.UNKNOWN);
+		this(path,RootType.UNKNOWN,RootContentType.BINARY);
 	}
 	
-	public DirectoryRoot(File path,RootType type){
+	public DirectoryRoot(File path,RootType type,RootContentType contentType){
 		this.path = checkNotNull(path,"expect path");
-		this.type = checkNotNull(type,"expect root type");
+		this.type = checkNotNull(type,"expect root relation");
+		this.contentType = checkNotNull(contentType,"expect root content type");
 		if( !path.isDirectory()){
 			throw new IllegalArgumentException("expect path to be a directory, path=" + path.getAbsolutePath());
 		}
@@ -66,14 +67,14 @@ public class DirectoryRoot implements Root {
 
 	@Override
 	public OutputStream getResourceOutputStream(String relPath) throws IOException {
-		if(isDirectory()){
+		if(isDirectoryAndExists()){
 			//TODO:check relPath is in the given directory, no escaping up!
 			File f = new File(path.getAbsolutePath(),relPath);
-			if( !f.exists()){
+			if(!f.exists()){
 				f.getParentFile().mkdirs();
 				f.createNewFile();
 			}
-			if( !f.canWrite()){
+			if(!f.canWrite()){
 				throw new IOException(String.format("Don't have permission to write file '%s' in dir '%s' for root %s. Full path %s",relPath,path.getAbsolutePath(),this, f.getAbsolutePath()));
 			}
 			if( !f.exists()){
@@ -87,10 +88,10 @@ public class DirectoryRoot implements Root {
 	
 	@Override
 	public InputStream getResourceInputStream(String relPath) throws IOException {
-		if( isDirectory()){
+		if(isDirectoryAndExists()){
 			//TODO:check relPath is in the given directory, no escaping up!
 			File f = getRelPath(relPath);
-			if( !f.exists()){
+			if(!f.exists()){
 				throw new FileNotFoundException(String.format("Couldn't find file '%s' in dir '%s' for root %s",relPath,path.getAbsolutePath(),this));
 			}
 			if(!f.canRead()){
@@ -104,11 +105,6 @@ public class DirectoryRoot implements Root {
 	
 	private File getRelPath(String relpath){
 		return new File(path.getAbsolutePath(),relpath);
-	}
-		
-	@Override
-	public boolean isTypeKnown(){
-		return !RootType.UNKNOWN.equals(type);
 	}
 
 	@Override
@@ -124,10 +120,14 @@ public class DirectoryRoot implements Root {
 	public RootType getType(){
 		return type;
 	}
+		
+	@Override
+	public RootContentType getContentType(){
+		return contentType;
+	}
 	
-	
-	private boolean isDirectory(){
-		return path.isDirectory();
+	private boolean isDirectoryAndExists(){
+		return path.isDirectory() && path.exists();
 	}
 
 	@Override
@@ -136,7 +136,9 @@ public class DirectoryRoot implements Root {
     		.toStringHelper(this)
     		.add("path", getPathName())
     		.add("type", type)
-    		.add("isDirectory", isDirectory())
+    		.add("contentType", contentType)
+    		.add("isDirectory", path.isDirectory())
+    		.add("exists", path.exists())
     		.toString();
 	}
 
@@ -165,27 +167,39 @@ public class DirectoryRoot implements Root {
 		    return false;
 	    if (type != other.type)
 		    return false;
+	    if (contentType != other.contentType)
+		    return false;
 	    return true;
     }
-
-	@Override
-	public void walkResources(Function<ClassPathResource, Boolean> callback){
-		walkDir(callback, this, "", path);
-	}
 	
-	private static void walkDir(Function<ClassPathResource, Boolean> callback, Root root, String parentPath, File dir) {
+	@Override
+	public void accept(RootVisitor visitor) {
+		if( visitor.visit(this)){
+			visitResources(visitor);
+		}
+		visitor.endVisit(this);
+	}
+
+	private void visitResources(RootVisitor visitor) {
+		if(isDirectoryAndExists()){
+			visitResources(this,visitor,"",path);
+		}
+	}
+
+	private static void visitResources(Root root, RootVisitor visitor, String parentPath, File dir) {
 		File[] files = dir.listFiles(FILE_FILTER);
 		for (File f : files) {
 			String relPath = parentPath + "/" + f.getName();
-			ClassPathResource child = new ClassPathResource(root, relPath);
-			boolean carryOn = callback.apply(child) && !isCancelled();
-			if (!carryOn) {
+			RootResource child = new RootResource(root, relPath);
+			visitor.visit(child);
+			visitor.endVisit(child);
+			if( isCancelled()){
 				return;
 			}
 		}
 		File[] childDirs = dir.listFiles(DIR_FILTER);
 		for (File childDir : childDirs) {
-			walkDir(callback, root, parentPath + "/" + childDir.getName(), childDir);
+			visitResources(root, visitor, parentPath + "/" + childDir.getName(), childDir);
 		}
 	}
 	

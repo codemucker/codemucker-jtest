@@ -12,7 +12,7 @@ public final class IncludeExcludeMatcherBuilder<T> {
 	private final Collection<Matcher<T>> excludes = newArrayList();
 	private final Collection<Matcher<T>> includes = newArrayList();
 	
-	public static <T> IncludeExcludeMatcherBuilder<T> newBuilder() {
+	public static <T> IncludeExcludeMatcherBuilder<T> builder() {
 		return new IncludeExcludeMatcherBuilder<T>();
 	}
 

@@ -18,12 +18,12 @@ public class LoggingMatchedCallback implements FinderMatchedCallback {
 	}
 	
 	@Override
-	public void onArchiveMatched(ClassPathResource archiveFile) {
+	public void onArchiveMatched(RootResource archiveFile) {
 		logger.info("matched archive:" + archiveFile);
 	}
 
 	@Override
-	public void onResourceMatched(ClassPathResource resource) {
+	public void onResourceMatched(RootResource resource) {
 		logger.info("matched resource:" + resource);
 	}
 

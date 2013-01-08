@@ -8,7 +8,7 @@ import com.bertvanbrakel.test.finder.matcher.Matcher;
 public class MatcherBackedFinderFilter implements FinderFilter {
 	
 	private final Matcher<Root> classPathMatcher;
-	private final Matcher<ClassPathResource> resourceMatcher;
+	private final Matcher<RootResource> resourceMatcher;
 	private final Matcher<String> classNameMatcher;
 	private final Matcher<Class<?>> classMatcher;
 	
@@ -18,7 +18,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 	
 	private MatcherBackedFinderFilter(
 			Matcher<Root> classPathMatcher
-			, Matcher<ClassPathResource> resourceMatcher
+			, Matcher<RootResource> resourceMatcher
 			, Matcher<String> resourceNameMatcher
 			, Matcher<String> classNameMatcher
 			, Matcher<Class<?>> classMatcher
@@ -29,18 +29,17 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 		this.classMatcher = anyIfNull(classMatcher);
 	}
 	
-	@SuppressWarnings("unchecked")
     private <T> Matcher<T> anyIfNull(Matcher<T> matcher){
-		return (Matcher<T>) (matcher!=null?matcher:LogicalMatchers.any());
+		return LogicalMatchers.anyIfNull(matcher);
 	}
 	
 	@Override
-	public boolean isIncludeResource(ClassPathResource resource) {
+	public boolean isIncludeResource(RootResource resource) {
 		return resourceMatcher.matches(resource);
 	}
 	
 	@Override
-	public boolean isIncludeDir(ClassPathResource resource) {
+	public boolean isIncludeDir(RootResource resource) {
 		return true;//fileMatcher.matches(resource);
 	}
 	
@@ -60,7 +59,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 	}
 	
 	@Override
-	public boolean isIncludeArchive(ClassPathResource archiveFile) {
+	public boolean isIncludeArchive(RootResource archiveFile) {
 		return resourceMatcher.matches(archiveFile);
 	}
 
@@ -71,7 +70,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 	
 	public static class Builder {
 		private Matcher<Root> classPathMatcher;
-		private Matcher<ClassPathResource> resourceMatcher;
+		private Matcher<RootResource> resourceMatcher;
 		private Matcher<String> resourceNameMatcher;
 		private Matcher<String> classNameMatcher;
 		private Matcher<Class<?>> classMatcher;
@@ -111,7 +110,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
         	return this;
 		}
 
-		public MatcherBackedFinderFilter.Builder setResourceMatcher(Matcher<ClassPathResource> resourceMatcher) {
+		public MatcherBackedFinderFilter.Builder setResourceMatcher(Matcher<RootResource> resourceMatcher) {
         	this.resourceMatcher = resourceMatcher;
         	return this;
 		}

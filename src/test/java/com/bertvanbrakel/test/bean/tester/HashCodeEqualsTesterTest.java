@@ -15,7 +15,7 @@
  */
 package com.bertvanbrakel.test.bean.tester;
 
-import static junit.framework.Assert.assertTrue;
+import static org.junit.Assert.assertTrue;
 import junit.framework.AssertionFailedError;
 
 import org.junit.Test;
@@ -83,7 +83,7 @@ public class HashCodeEqualsTesterTest {
 		boolean failed = false;
 		try {
 			tester.checkHashCodeEquals(TstBeanBrokenCtor.class);
-		} catch (AssertionFailedError e) {
+		} catch (AssertionError e) {
 			failed = true;
 		}
 		assertTrue(msg, failed);

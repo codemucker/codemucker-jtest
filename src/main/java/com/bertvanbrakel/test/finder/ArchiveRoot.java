@@ -14,7 +14,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
 import java.util.zip.ZipFile;
 
-import com.google.common.base.Function;
 import com.google.common.base.Objects;
 
 /**
@@ -23,15 +22,17 @@ import com.google.common.base.Objects;
 public class ArchiveRoot implements Root {
 	private final File path;
 	private final RootType type;
+	private final RootContentType contentType;
 	private final AtomicReference<ZipFile> cachedZip = new AtomicReference<ZipFile>();
 	
 	public ArchiveRoot(File path){
-		this(path,RootType.UNKNOWN);
+		this(path,RootType.UNKNOWN,RootContentType.BINARY);
 	}
 	
-	public ArchiveRoot(File path,RootType type){
+	public ArchiveRoot(File path,RootType type,RootContentType contentType){
 		this.path = checkNotNull(path,"expect path");
-		this.type = checkNotNull(type,"expect root type");
+		this.type = checkNotNull(type,"expect root relation");
+		this.contentType = checkNotNull(contentType,"expect root content type");
 		checkState(path.isFile(),"expect archive file to be a file");
 	}
 	
@@ -82,11 +83,6 @@ public class ArchiveRoot implements Root {
 	}
 	
 	@Override
-	public boolean isTypeKnown(){
-		return !RootType.UNKNOWN.equals(type);
-	}
-
-	@Override
 	public String getPathName(){
 		return path.getAbsolutePath();
 	}
@@ -97,21 +93,34 @@ public class ArchiveRoot implements Root {
 	}
 
 	@Override
+	public RootContentType getContentType(){
+		return contentType;
+	}
+	
+	@Override
 	public String toString(){
 		return Objects
     		.toStringHelper(this)
     		.add("path", getPathName())
     		.add("type", type)
+    		.add("contentType", contentType)
     		.add("isArchive", true)
     		.add("exists", path.canRead())
      		.toString();
     }
-
+	
 	@Override
-    public void walkResources(Function<ClassPathResource, Boolean> callback) {
+	public void accept(RootVisitor visitor) {
+		if( visitor.visit(this)){
+			visitResources(visitor);
+		}
+		visitor.endVisit(this);
+	}
+
+	private void visitResources(RootVisitor visitor) {
 		ZipFile zip = getZip();
 		try {
-			internalWalkZipEntries(callback, this, zip);
+			internalWalkZipEntries(this, visitor, zip);
 		} finally {
 			try {
 	            zip.close();
@@ -121,16 +130,17 @@ public class ArchiveRoot implements Root {
 		}
 	}
 	
-	private static void internalWalkZipEntries(Function<ClassPathResource,Boolean> callback, Root root, ZipFile zip){
+	private static void internalWalkZipEntries(Root root, RootVisitor visitor, ZipFile zip){
 		Enumeration<? extends ZipEntry> entries = zip.entries();
 		while(entries.hasMoreElements()){
 			ZipEntry entry = entries.nextElement();
 			if( !entry.isDirectory()){
 				String name = entry.getName();
 				name = ensureStartsWithSlash(name);
-				ClassPathResource zipResourceEntry = new ClassPathResource(root, name);
-				boolean carryOn = callback.apply(zipResourceEntry) && !isCancelled();
-				if (!carryOn) {
+				RootResource zipResourceEntry = new RootResource(root, name);
+				visitor.visit(zipResourceEntry);
+				visitor.endVisit(zipResourceEntry);
+				if (isCancelled()) {
 					return;
 				}
 			}
@@ -148,4 +158,36 @@ public class ArchiveRoot implements Root {
 	    return name;
     }
 
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result
+				+ ((contentType == null) ? 0 : contentType.hashCode());
+		result = prime * result + ((path == null) ? 0 : path.hashCode());
+		result = prime * result
+				+ ((type == null) ? 0 : type.hashCode());
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		ArchiveRoot other = (ArchiveRoot) obj;
+		if (contentType != other.contentType)
+			return false;
+		if (path == null) {
+			if (other.path != null)
+				return false;
+		} else if (!path.equals(other.path))
+			return false;
+		if (type != other.type)
+			return false;
+		return true;
+	}
 }

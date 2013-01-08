@@ -31,12 +31,12 @@ import com.bertvanbrakel.test.finder.matcher.ResourceMatchers;
 
 public class Criteria {
 	
-	private final ClassPathBuilder classPathBuilder = ClassPathBuilder.newBuilder();
+	private final Roots.Builder classPathBuilder = Roots.builder();
 	
-	private final IncludeExcludeMatcherBuilder<ClassPathResource> resources = IncludeExcludeMatcherBuilder.newBuilder();
-	private final IncludeExcludeMatcherBuilder<Class<?>> classes = IncludeExcludeMatcherBuilder.newBuilder();
-	private final IncludeExcludeMatcherBuilder<String> classNames = IncludeExcludeMatcherBuilder.newBuilder();
-	private final IncludeExcludeMatcherBuilder<String> resourceNames = IncludeExcludeMatcherBuilder.newBuilder();
+	private final IncludeExcludeMatcherBuilder<RootResource> resources = IncludeExcludeMatcherBuilder.builder();
+	private final IncludeExcludeMatcherBuilder<Class<?>> classes = IncludeExcludeMatcherBuilder.builder();
+	private final IncludeExcludeMatcherBuilder<String> classNames = IncludeExcludeMatcherBuilder.builder();
+	private final IncludeExcludeMatcherBuilder<String> resourceNames = IncludeExcludeMatcherBuilder.builder();
 	
 	private ClassFinder.Builder builder = ClassFinder.newBuilder();
 
@@ -106,7 +106,7 @@ public class Criteria {
 		return this;
 	}
 
-	public Criteria excludeFileName(Matcher<ClassPathResource> matcher) {
+	public Criteria excludeFileName(Matcher<RootResource> matcher) {
 		resources.addExclude(matcher);
 		return this;
 	}
@@ -121,7 +121,7 @@ public class Criteria {
 		return this;
 	}
 	
-	public Criteria includeFileName(Matcher<ClassPathResource> matcher) {
+	public Criteria includeFileName(Matcher<RootResource> matcher) {
 		resources.addInclude(matcher);
 		return this;
 	}

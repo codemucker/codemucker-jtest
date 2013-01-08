@@ -5,7 +5,7 @@ import com.bertvanbrakel.test.finder.ClassFinder.FinderErrorCallback;
 public class BaseErrorCallback implements FinderErrorCallback {
 
 	@Override
-    public void onResourceError(ClassPathResource resource, Exception e) {
+    public void onResourceError(RootResource resource, Exception e) {
     }
 
 	@Override
@@ -13,7 +13,7 @@ public class BaseErrorCallback implements FinderErrorCallback {
     }
 
 	@Override
-    public void onArchiveError(ClassPathResource archive, Exception e) {
+    public void onArchiveError(RootResource archive, Exception e) {
     }
 
 	@Override

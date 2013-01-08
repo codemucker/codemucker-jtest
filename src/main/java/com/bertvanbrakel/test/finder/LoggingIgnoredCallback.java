@@ -18,12 +18,12 @@ public class LoggingIgnoredCallback implements FinderIgnoredCallback {
 	}
 	
 	@Override
-    public void onArchiveIgnored(ClassPathResource archiveFile) {
+    public void onArchiveIgnored(RootResource archiveFile) {
 		logger.info("ignoring archive:" + archiveFile);
     }
 
 	@Override
-    public void onResourceIgnored(ClassPathResource resource) {
+    public void onResourceIgnored(RootResource resource) {
 		logger.info("ignoring resource:" + resource);
 	}
 

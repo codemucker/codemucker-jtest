@@ -2,31 +2,31 @@ package com.bertvanbrakel.test.finder.matcher;
 
 import java.util.regex.Pattern;
 
-import com.bertvanbrakel.test.finder.ClassPathResource;
+import com.bertvanbrakel.test.finder.RootResource;
 import com.bertvanbrakel.test.util.TestUtils;
 
 public class ResourceMatchers extends LogicalMatchers {
 	
     @SuppressWarnings("unchecked")
-    public static Matcher<ClassPathResource> any() {
+    public static Matcher<RootResource> any() {
     	return LogicalMatchers.any();
     }
     
     @SuppressWarnings("unchecked")
-    public static Matcher<ClassPathResource> none() {
+    public static Matcher<RootResource> none() {
     	return LogicalMatchers.none();
     }
     
-	public Matcher<ClassPathResource> withPackage(String packageName) {
+	public Matcher<RootResource> withPackage(String packageName) {
 		String regExp = "/" + packageName.replace('.', '/') + "/.*";
 		return withPath(Pattern.compile(regExp));
 	}
 
-	public static Matcher<ClassPathResource> withExtension(String extension) {
+	public static Matcher<RootResource> withExtension(String extension) {
 		return withAntPath("*." + extension);
 	}
 
-	public static Matcher<ClassPathResource> withName(Class<?> classToMatch) {
+	public static Matcher<RootResource> withName(Class<?> classToMatch) {
 		String path = '/' + classToMatch.getSimpleName() + "\\.java";
 		Package pkg = classToMatch.getPackage();
 		if (pkg != null) {
@@ -35,23 +35,23 @@ public class ResourceMatchers extends LogicalMatchers {
 		return withPath(Pattern.compile(path));
 	}
 	
-	public static Matcher<ClassPathResource> withName(String antPattern) {
+	public static Matcher<RootResource> withName(String antPattern) {
 		return withAntPath("*/" + antPattern);
 	}
 
-	public static Matcher<ClassPathResource> inPackage(Class<?> classWithPkg) {
+	public static Matcher<RootResource> inPackage(Class<?> classWithPkg) {
 		return inPackage(classWithPkg.getPackage());
 	}
 
-	public static Matcher<ClassPathResource> inPackage(Package pkg) {
+	public static Matcher<RootResource> inPackage(Package pkg) {
 		return withAntPath(pkg.toString().replace('.', '/'));
 	}
 
-	public static Matcher<ClassPathResource> withAntPath(String antPattern) {
+	public static Matcher<RootResource> withAntPath(String antPattern) {
 		return withPath(TestUtils.antExpToPattern(antPattern));
 	}
 
-	public static Matcher<ClassPathResource> withPath(Pattern pattern) {
+	public static Matcher<RootResource> withPath(Pattern pattern) {
 		return new RegExpPatternResourceMatcher(pattern);
 	}
 }

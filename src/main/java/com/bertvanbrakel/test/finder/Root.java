@@ -5,19 +5,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import com.google.common.base.Function;
-
+/**
+ * Represents the top level node to resolve relative resource paths from. This could be 
+ * a directory, zip file, network resource or other. In most cases this is likely to be
+ * the root of a source directory or a jar file.
+ *
+ */
 public interface Root {
 
+	/**
+	 * Provide some default categorisation of the root type so that tooling can decide where to 
+	 * place newly generated resources, or decide if a root is to be used for a given type of processing
+	 * or searching
+	 */
 	public static enum RootType {
-    	MAIN_SRC
-    	, TEST_SRC
-    	, MAIN_COMPILE
-    	, TEST_COMPILE
+    	MAIN
+    	, TEST
     	, DEPENDENCY
-    	, GENERATED_SRC
-    	, GENERATED_COMPILE
+    	, GENERATED
     	, UNKNOWN;
+    }
+	
+	public static enum RootContentType {
+    	SRC, BINARY, MIXED;
     }
 
 	/**
@@ -44,9 +54,8 @@ public interface Root {
 	
 	String getPathName();
 
-	boolean isTypeKnown();
-
 	RootType getType();
+	RootContentType getContentType();
 
-	void walkResources(Function<ClassPathResource, Boolean> callback);
+	void accept(RootVisitor visitor);
 }

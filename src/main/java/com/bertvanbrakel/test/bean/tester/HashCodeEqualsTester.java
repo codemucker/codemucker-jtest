@@ -17,8 +17,8 @@ package com.bertvanbrakel.test.bean.tester;
 
 import static com.bertvanbrakel.test.bean.ClassUtils.invokeCtorWith;
 import static com.bertvanbrakel.test.bean.ClassUtils.invokeMethod;
-import static junit.framework.Assert.assertEquals;
-import static junit.framework.Assert.fail;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 import java.lang.reflect.Constructor;
 import java.util.Collection;

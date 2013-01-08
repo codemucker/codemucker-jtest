@@ -5,11 +5,11 @@ import com.bertvanbrakel.test.finder.ClassFinder.FinderIgnoredCallback;
 public class BaseIgnoredCallback implements FinderIgnoredCallback {
 
 	@Override
-    public void onArchiveIgnored(ClassPathResource archiveFile) {
+    public void onArchiveIgnored(RootResource archiveFile) {
     }
 
 	@Override
-    public void onResourceIgnored(ClassPathResource resource) {
+    public void onResourceIgnored(RootResource resource) {
     }
 
 	@Override

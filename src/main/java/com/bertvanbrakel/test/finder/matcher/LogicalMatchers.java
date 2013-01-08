@@ -23,6 +23,7 @@ public class LogicalMatchers {
 	/**
      * Synonym for {@link #and(Matcher...)}
      */
+	@SafeVarargs
     public static <T> Matcher<T> all(final Matcher<T>... matchers) {
     	return and(matchers);
     }
@@ -34,6 +35,8 @@ public class LogicalMatchers {
     public static <I extends Iterable<Matcher<T>>,T> Matcher<T> and(final I matchers) {
     	return new MatcherAnd<T>(matchers);   
     }
+    
+    @SafeVarargs
 	public static <T> Matcher<T> and(final Matcher<T>... matchers) {
     	return new MatcherAnd<T>(matchers);
     }
@@ -41,10 +44,16 @@ public class LogicalMatchers {
 	/**
      * Synonym for {@link #or(Matcher...)}
      */
+    @SafeVarargs
     public static <T> Matcher<T> either(final Matcher<T>... matchers) {
     	return or(matchers);
     }
 
+    @SuppressWarnings("unchecked")
+    public static <T> Matcher<T> anyIfNull(Matcher<T> matcher) {
+    	return matcher!=null?matcher:(Matcher<T>) MATCHER_ANY;
+    }
+    
     @SuppressWarnings("unchecked")
     public static <T> Matcher<T> any() {
     	return (Matcher<T>) MATCHER_ANY;
@@ -58,6 +67,7 @@ public class LogicalMatchers {
     /**
      * Synonym for {@link #or(Matcher...)}
      */
+    @SafeVarargs
     public static <T> Matcher<T> any(final Matcher<T>... matchers) {
     	return or(matchers);
     }
@@ -66,6 +76,7 @@ public class LogicalMatchers {
     	return or(matchers);
     }
     
+    @SafeVarargs
 	public static <T> Matcher<T> or(final Matcher<T>... matchers) {
     	return new MatcherOr<T>(matchers);
     }
