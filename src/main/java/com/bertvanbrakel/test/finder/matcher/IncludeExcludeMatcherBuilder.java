@@ -1,11 +1,13 @@
 package com.bertvanbrakel.test.finder.matcher;
 
-import static com.bertvanbrakel.test.finder.matcher.LogicalMatchers.all;
-import static com.bertvanbrakel.test.finder.matcher.LogicalMatchers.any;
-import static com.bertvanbrakel.test.finder.matcher.LogicalMatchers.not;
+import static com.bertvanbrakel.lang.matcher.Logical.all;
+import static com.bertvanbrakel.lang.matcher.Logical.any;
+import static com.bertvanbrakel.lang.matcher.Logical.not;
 import static com.google.common.collect.Lists.newArrayList;
 
 import java.util.Collection;
+
+import com.bertvanbrakel.lang.matcher.Matcher;
 
 public final class IncludeExcludeMatcherBuilder<T> {
 
@@ -16,7 +18,6 @@ public final class IncludeExcludeMatcherBuilder<T> {
 		return new IncludeExcludeMatcherBuilder<T>();
 	}
 
-	@SuppressWarnings("unchecked")
     public Matcher<T> build(){
 		if (includes.size() > 0 && excludes.size() > 0) {
 			return all(not(all(excludes)), any(includes));

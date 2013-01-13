@@ -1,9 +1,11 @@
 package com.bertvanbrakel.test.finder;
 
+import com.bertvanbrakel.lang.matcher.Logical;
+import com.bertvanbrakel.lang.matcher.Matcher;
+
+import com.bertvanbrakel.lang.matcher.Matcher;
 import com.bertvanbrakel.test.finder.ClassFinder.FinderFilter;
 import com.bertvanbrakel.test.finder.matcher.ClassMatchers;
-import com.bertvanbrakel.test.finder.matcher.LogicalMatchers;
-import com.bertvanbrakel.test.finder.matcher.Matcher;
 
 public class MatcherBackedFinderFilter implements FinderFilter {
 	
@@ -30,7 +32,7 @@ public class MatcherBackedFinderFilter implements FinderFilter {
 	}
 	
     private <T> Matcher<T> anyIfNull(Matcher<T> matcher){
-		return LogicalMatchers.anyIfNull(matcher);
+		return Logical.anyIfNull(matcher);
 	}
 	
 	@Override

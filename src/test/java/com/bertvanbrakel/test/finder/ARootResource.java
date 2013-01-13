@@ -1,20 +1,17 @@
 package com.bertvanbrakel.test.finder;
 
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.equalTo;
-
 import java.util.List;
 
-import org.hamcrest.Description;
-import org.hamcrest.Matcher;
-import org.hamcrest.TypeSafeMatcher;
-import org.hamcrest.beans.HasPropertyWithValue;
-
+import com.bertvanbrakel.lang.matcher.AProperty;
+import com.bertvanbrakel.lang.matcher.AString;
+import com.bertvanbrakel.lang.matcher.AbstractNotNullMatcher;
+import com.bertvanbrakel.lang.matcher.Description;
+import com.bertvanbrakel.lang.matcher.Matcher;
 import com.google.common.collect.Lists;
 
-public class ARootResource extends TypeSafeMatcher<RootResource> {
+public class ARootResource extends AbstractNotNullMatcher<RootResource> {
 
-	private List<Matcher<Object>> matchers = Lists.newArrayList();
+	private List<Matcher<RootResource>> matchers = Lists.newArrayList();
 	
 	public static ARootResource with(){
 		return new ARootResource();
@@ -26,12 +23,12 @@ public class ARootResource extends TypeSafeMatcher<RootResource> {
 	}
 	
 	public ARootResource pathEndsWith(String val){
-		path(endsWith(val));
+		path(AString.endingWith(val));
 		return this;
 	}
 	
 	public ARootResource path(String val){
-		path(equalTo(val));
+		path(AString.equalTo(val));
 		return this;
 	}
 	
@@ -41,7 +38,7 @@ public class ARootResource extends TypeSafeMatcher<RootResource> {
 	}
 	
 	private <T> void addMatcher(String propertyName, Matcher<T> propertyMatcher){
-		matchers.add(HasPropertyWithValue.hasProperty(propertyName, propertyMatcher));
+		matchers.add(AProperty.on(RootResource.class).named(propertyName).equals(propertyMatcher));
 	}
 
 	@Override
@@ -54,7 +51,7 @@ public class ARootResource extends TypeSafeMatcher<RootResource> {
 	@Override
 	public boolean matchesSafely(RootResource resource) {
 		for (int i = 0; i < matchers.size(); i++) {
-			if(!matchers.get(i).matches(resource)){
+			if (!matchers.get(i).matches(resource)) {
 				return false;
 			}
 		}

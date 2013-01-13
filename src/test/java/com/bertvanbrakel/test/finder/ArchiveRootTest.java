@@ -1,12 +1,13 @@
 package com.bertvanbrakel.test.finder;
 
+import static com.bertvanbrakel.lang.matcher.Assert.assertThat;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.util.Collection;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import com.bertvanbrakel.lang.matcher.AList;
@@ -30,7 +31,7 @@ public class ArchiveRootTest {
 			}
 		});
 		
-		MatcherAssert.assertThat(
+		assertThat(
 			resources,
 			AList.of(RootResource.class)
 				.inOrder()

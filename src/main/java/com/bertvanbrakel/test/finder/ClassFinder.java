@@ -8,7 +8,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import com.bertvanbrakel.lang.IsBuilder;
+import com.bertvanbrakel.lang.IBuilder;
 import com.bertvanbrakel.test.finder.Root.RootType;
 import com.bertvanbrakel.test.util.ClassNameUtil;
 
@@ -249,7 +249,7 @@ public class ClassFinder {
 			return copy;
 		}
 		
-		public Builder setClassPathRoots(IsBuilder<Iterable<Root>> builder) {
+		public Builder setClassPathRoots(IBuilder<Iterable<Root>> builder) {
 			setSearchClassPaths(builder.build());
         	return this;
         }

@@ -4,9 +4,11 @@ import static com.google.common.base.Preconditions.checkNotNull;
 
 import java.util.regex.Pattern;
 
+import com.bertvanbrakel.lang.matcher.AbstractMatcher;
+import com.bertvanbrakel.lang.matcher.MatchDiagnostics;
 import com.bertvanbrakel.test.util.TestUtils;
 
-public class RegExpMatcher implements Matcher<String> {
+public class RegExpMatcher extends AbstractMatcher<String> {
 	private final Pattern pattern;
 	
 	public static RegExpMatcher withAntPattern(String antExpression){
@@ -26,7 +28,7 @@ public class RegExpMatcher implements Matcher<String> {
 	}
 
 	@Override
-	public boolean matches(String name) {
+	public boolean matches(String name, MatchDiagnostics diag) {
 		return pattern.matcher(name).matches();
 	}
 }

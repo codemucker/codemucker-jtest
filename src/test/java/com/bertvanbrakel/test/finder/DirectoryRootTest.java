@@ -1,9 +1,11 @@
 package com.bertvanbrakel.test.finder;
 
+import static com.bertvanbrakel.lang.matcher.Assert.assertThat;
+import static com.bertvanbrakel.lang.matcher.Assert.is;
+
 import java.io.File;
 import java.util.Collection;
 
-import org.hamcrest.MatcherAssert;
 import org.junit.Test;
 
 import com.bertvanbrakel.lang.matcher.AList;
@@ -28,14 +30,14 @@ public class DirectoryRootTest {
 			}
 		});
 		
-		MatcherAssert.assertThat(
+		assertThat(
 			resources,
-			AList.of(RootResource.class)
+			is(AList.of(RootResource.class)
 				.inAnyOrder()
 				.containing()
 				.item(ARootResource.with().pathFromClass(TstBeanOne.class))
 				.item(ARootResource.with().pathFromClass(TstBeanTwo.class))
-				.item(ARootResource.with().pathFromClass(DirectoryRootTest.class))
+				.item(ARootResource.with().pathFromClass(DirectoryRootTest.class)))
 		);
 	}
 }

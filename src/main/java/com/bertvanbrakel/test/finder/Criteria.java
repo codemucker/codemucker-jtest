@@ -19,6 +19,7 @@ import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.regex.Pattern;
 
+import com.bertvanbrakel.lang.matcher.Matcher;
 import com.bertvanbrakel.test.finder.ClassFinder.Builder;
 import com.bertvanbrakel.test.finder.ClassFinder.FinderErrorCallback;
 import com.bertvanbrakel.test.finder.ClassFinder.FinderFilter;
@@ -26,7 +27,6 @@ import com.bertvanbrakel.test.finder.ClassFinder.FinderIgnoredCallback;
 import com.bertvanbrakel.test.finder.ClassFinder.FinderMatchedCallback;
 import com.bertvanbrakel.test.finder.matcher.ClassMatchers;
 import com.bertvanbrakel.test.finder.matcher.IncludeExcludeMatcherBuilder;
-import com.bertvanbrakel.test.finder.matcher.Matcher;
 import com.bertvanbrakel.test.finder.matcher.ResourceMatchers;
 
 public class Criteria {
@@ -77,12 +77,12 @@ public class Criteria {
     }
 
 	public Criteria setIncludeClassesDir(boolean b) {
-		classPathBuilder.setIncludeClassesDir(b);
+		classPathBuilder.setIncludeMainSrcDir(b);
 		return this;
 	}
 
 	public Criteria setIncludeTestDir(boolean b) {
-		classPathBuilder.setIncludeTestDir(b);
+		classPathBuilder.setIncludeTestSrcDir(b);
 		return this;
 	}
 

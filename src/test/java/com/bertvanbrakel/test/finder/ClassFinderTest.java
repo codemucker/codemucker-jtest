@@ -23,6 +23,8 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Collection;
 
+import com.bertvanbrakel.lang.matcher.Logical;
+import com.bertvanbrakel.lang.matcher.Matcher;
 import org.junit.Test;
 
 import com.bertvanbrakel.test.finder.ClassFinder.Builder;
@@ -32,8 +34,6 @@ import com.bertvanbrakel.test.finder.c.TstAnonymous;
 import com.bertvanbrakel.test.finder.d.TstInner;
 import com.bertvanbrakel.test.finder.e.TstAnnotation;
 import com.bertvanbrakel.test.finder.e.TstAnnotationBean;
-import com.bertvanbrakel.test.finder.matcher.LogicalMatchers;
-import com.bertvanbrakel.test.finder.matcher.Matcher;
 
 public class ClassFinderTest {
 
@@ -339,6 +339,6 @@ public class ClassFinderTest {
 	}
 	
 	private <T> Matcher<T> exclude(Matcher<T> mactcher){
-		return LogicalMatchers.not(mactcher);
+		return Logical.not(mactcher);
 	}
 }

@@ -46,7 +46,7 @@ public class DirectoryRoot implements Root {
 		this.path = checkNotNull(path,"expect path");
 		this.type = checkNotNull(type,"expect root relation");
 		this.contentType = checkNotNull(contentType,"expect root content type");
-		if( !path.isDirectory()){
+		if( path.exists() && !path.isDirectory()){
 			throw new IllegalArgumentException("expect path to be a directory, path=" + path.getAbsolutePath());
 		}
 	}
@@ -127,7 +127,7 @@ public class DirectoryRoot implements Root {
 	}
 	
 	private boolean isDirectoryAndExists(){
-		return path.isDirectory() && path.exists();
+		return path.exists() && path.isDirectory();
 	}
 
 	@Override

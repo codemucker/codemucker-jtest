@@ -2,18 +2,21 @@ package com.bertvanbrakel.test.finder.matcher;
 
 import java.util.regex.Pattern;
 
+import com.bertvanbrakel.lang.matcher.AbstractNotNullMatcher;
+import com.bertvanbrakel.lang.matcher.Logical;
+import com.bertvanbrakel.lang.matcher.Matcher;
 import com.google.common.base.Objects;
 
-public class ClassNameMatchers extends LogicalMatchers {
+public class ClassNameMatchers extends Logical {
 	
     @SuppressWarnings("unchecked")
     public static Matcher<String> any() {
-    	return LogicalMatchers.any();
+    	return Logical.any();
     }
     
     @SuppressWarnings("unchecked")
     public static Matcher<String> none() {
-    	return LogicalMatchers.none();
+    	return Logical.none();
     }
 
     public Matcher<String> withExactPackage(String packageName) {
@@ -39,9 +42,9 @@ public class ClassNameMatchers extends LogicalMatchers {
     }
     
     public Matcher<String> withName(final String name){
-    	return new Matcher<String>(){
+    	return new AbstractNotNullMatcher<String>(){
 			@Override
-            public boolean matches(String found) {
+            public boolean matchesSafely(String found) {
 	            return name.equals(found);
             }
 			

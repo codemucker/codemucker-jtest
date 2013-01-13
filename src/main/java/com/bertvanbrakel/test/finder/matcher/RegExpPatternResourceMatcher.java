@@ -2,10 +2,11 @@ package com.bertvanbrakel.test.finder.matcher;
 
 import java.util.regex.Pattern;
 
+import com.bertvanbrakel.lang.matcher.AbstractNotNullMatcher;
 import com.bertvanbrakel.test.finder.RootResource;
 import com.google.common.base.Objects;
 
-public class RegExpPatternResourceMatcher implements Matcher<RootResource> {
+public class RegExpPatternResourceMatcher extends AbstractNotNullMatcher<RootResource> {
 	private final Pattern pattern;
 	
 	public RegExpPatternResourceMatcher(Pattern pattern) {
@@ -13,7 +14,7 @@ public class RegExpPatternResourceMatcher implements Matcher<RootResource> {
 	}
 
 	@Override
-	public boolean matches(RootResource resource) {
+	public boolean matchesSafely(RootResource resource) {
 		return pattern.matcher(resource.getRelPath()).matches();
 	}
 	

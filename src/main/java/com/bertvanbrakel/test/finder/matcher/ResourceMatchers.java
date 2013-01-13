@@ -2,19 +2,21 @@ package com.bertvanbrakel.test.finder.matcher;
 
 import java.util.regex.Pattern;
 
+import com.bertvanbrakel.lang.matcher.Logical;
+import com.bertvanbrakel.lang.matcher.Matcher;
 import com.bertvanbrakel.test.finder.RootResource;
 import com.bertvanbrakel.test.util.TestUtils;
 
-public class ResourceMatchers extends LogicalMatchers {
+public class ResourceMatchers extends Logical {
 	
     @SuppressWarnings("unchecked")
     public static Matcher<RootResource> any() {
-    	return LogicalMatchers.any();
+    	return Logical.any();
     }
     
     @SuppressWarnings("unchecked")
     public static Matcher<RootResource> none() {
-    	return LogicalMatchers.none();
+    	return Logical.none();
     }
     
 	public Matcher<RootResource> withPackage(String packageName) {
@@ -39,7 +41,7 @@ public class ResourceMatchers extends LogicalMatchers {
 		return withAntPath("*/" + antPattern);
 	}
 
-	public static Matcher<RootResource> inPackage(Class<?> classWithPkg) {
+	public static Matcher<RootResource> inPackag(Class<?> classWithPkg) {
 		return inPackage(classWithPkg.getPackage());
 	}
 

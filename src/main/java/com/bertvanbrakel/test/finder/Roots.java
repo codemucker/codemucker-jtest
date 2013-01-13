@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.bertvanbrakel.lang.IsBuilder;
+import com.bertvanbrakel.lang.IBuilder;
 import com.bertvanbrakel.test.finder.Root.RootContentType;
 import com.bertvanbrakel.test.finder.Root.RootType;
 import com.bertvanbrakel.test.util.ProjectFinder;
@@ -25,16 +25,16 @@ public final class Roots  {
 		return new Builder();
 	}
 	
-	public static class Builder implements IsBuilder<List<Root>> {
+	public static class Builder implements IBuilder<List<Root>> {
 
 		private final Map<String,Root> roots = newLinkedHashMap();
 		
 		private ProjectResolver projectResolver;
 
-		private boolean includeClassesDir = true;
-		private boolean includeTestDir = false;
+		private boolean includeMainSrcDir = true;
+		private boolean includeTestSrcDir = false;
+		private boolean includeGeneratedSrcDir = false;
 		private boolean includeClasspath = false;
-		private boolean includeGeneratedDir = false;
 		
 		private Set<String> archiveTypes = Sets.newHashSet("jar","zip","ear","war");	
 		
@@ -51,13 +51,13 @@ public final class Roots  {
 			
 			Builder copy = new Builder();
 			copy.roots.putAll(roots);
-			if (includeClassesDir) {
+			if (includeMainSrcDir) {
 				copy.addClassPaths(resolver.getMainSrcDirs(),RootType.MAIN, RootContentType.SRC);
 			}
-			if (includeTestDir) {
+			if (includeTestSrcDir) {
 				copy.addClassPaths(resolver.getTestSrcDirs(),RootType.MAIN, RootContentType.SRC);
 			}
-			if (includeGeneratedDir) {
+			if (includeGeneratedSrcDir) {
 				copy.addClassPaths(resolver.getGeneratedSrcDirs(),RootType.MAIN, RootContentType.SRC);
 			}
 			if (includeClasspath) {
@@ -73,10 +73,10 @@ public final class Roots  {
 		public Builder copyOf() {
 			Builder copy = new Builder();
 			copy.projectResolver = projectResolver;
-			copy.includeClassesDir = includeClassesDir;
+			copy.includeMainSrcDir = includeMainSrcDir;
 			copy.includeClasspath = includeClasspath;
-			copy.includeGeneratedDir = includeGeneratedDir;
-			copy.includeTestDir = includeTestDir;
+			copy.includeGeneratedSrcDir = includeGeneratedSrcDir;
+			copy.includeTestSrcDir = includeTestSrcDir;
 			copy.roots.putAll(roots);
 			copy.archiveTypes.addAll(archiveTypes);
 			
@@ -174,18 +174,34 @@ public final class Roots  {
 			return this;
 		}
 		
-		public Builder setIncludeClassesDir(boolean b) {
-			this.includeClassesDir = b;
+		public Builder setIncludeAll() {
+			setIncludeMainSrcDir(true);
+			setIncludeTestSrcDir(true);
+			setIncludeGeneratedSrcDir(true);
+			setIncludeClasspath(true);
+			return this;
+		}
+
+		public Builder setIncludeAllSrcs() {
+			setIncludeMainSrcDir(true);
+			setIncludeGeneratedSrcDir(true);
+			setIncludeTestSrcDir(true);
+			setIncludeClasspath(false);
+			return this;
+		}
+		
+		public Builder setIncludeMainSrcDir(boolean b) {
+			this.includeMainSrcDir = b;
 			return this;
 		}
 	
-		public Builder setIncludeTestDir(boolean b) {
-			this.includeTestDir = b;
+		public Builder setIncludeTestSrcDir(boolean b) {
+			this.includeTestSrcDir = b;
 			return this;
 		}
 	
-		public Builder setIncludeGeneratedDir(boolean b) {
-			this.includeGeneratedDir = b;
+		public Builder setIncludeGeneratedSrcDir(boolean b) {
+			this.includeGeneratedSrcDir = b;
 			return this;
 		}
 		

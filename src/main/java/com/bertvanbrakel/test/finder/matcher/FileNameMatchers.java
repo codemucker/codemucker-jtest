@@ -2,16 +2,20 @@ package com.bertvanbrakel.test.finder.matcher;
 
 import java.util.regex.Pattern;
 
-public class FileNameMatchers extends LogicalMatchers {
+import com.bertvanbrakel.lang.matcher.Logical;
+import com.bertvanbrakel.lang.matcher.Matcher;
+
+
+public class FileNameMatchers extends Logical {
 	
     @SuppressWarnings("unchecked")
     public static Matcher<String> any() {
-    	return LogicalMatchers.any();
+    	return Logical.any();
     }
     
     @SuppressWarnings("unchecked")
     public static Matcher<String> none() {
-    	return LogicalMatchers.none();
+    	return Logical.none();
     }
     
 	public Matcher<String> withPackage(String packageName) {
