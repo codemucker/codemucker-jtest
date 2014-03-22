@@ -7,13 +7,11 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
 
-import org.codemucker.jfind.ClassFinderException;
-
 import com.google.common.collect.ImmutableSet;
 
 public class MavenLayoutProjectResolver implements ProjectResolver {
 	
-	private final Collection<String> projectFiles;
+	private final Collection<String> projectRootFiles;
 
 	public MavenLayoutProjectResolver(){
 		this(
@@ -26,11 +24,11 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 	}
 	
 	public MavenLayoutProjectResolver(Iterable<String> projectFiles){
-		this.projectFiles = ImmutableSet.<String>builder().addAll(projectFiles).build();
+		this.projectRootFiles = ImmutableSet.<String>builder().addAll(projectFiles).build();
 	}
 
 	public MavenLayoutProjectResolver(String... projectFiles){
-		this.projectFiles = ImmutableSet.<String>builder().add(projectFiles).build();
+		this.projectRootFiles = ImmutableSet.<String>builder().add(projectFiles).build();
 	}
 	
 	@Override
@@ -89,7 +87,7 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 		if (!targetDir.exists()) {
 			boolean created = targetDir.mkdirs();
 			if (!created) {
-				throw new ClassFinderException("Couldn't create maven target dir " + targetDir.getAbsolutePath());
+				throw new JTestException("Couldn't create maven target dir " + targetDir.getAbsolutePath());
 			}
 		}
 		return targetDir;
@@ -110,11 +108,11 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 		if(!dir.exists() && createIfNotFound){
 			boolean created = dir.mkdirs();
 			if (!created) {
-				throw new ClassFinderException("Couldn't create dir " + dir.getAbsolutePath());
+				throw new JTestException("Couldn't create dir " + dir.getAbsolutePath());
 			}
 		}
 		if(!dir.isDirectory()){
-			throw new ClassFinderException("Couldn't create dir, is not a directory " + dir.getAbsolutePath());		
+			throw new JTestException("Couldn't create dir, is not a directory " + dir.getAbsolutePath());		
 		}
 		return dir;
 	}
@@ -124,7 +122,7 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 		FilenameFilter projectDirFilter = new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				return projectFiles.contains(name);
+				return projectRootFiles.contains(name);
 			}
 		};
 
@@ -136,10 +134,10 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 				}
 				dir = dir.getParentFile();
 			}
-			throw new ClassFinderException("Can't find project dir. Started looking in %s, looking for any parent directory containing one of %s",
-			                new File("./").getCanonicalPath(), projectFiles);
+			throw new JTestException("Can't find project dir. Started looking in %s, looking for any parent directory containing one of %s",
+			                new File("./").getCanonicalPath(), projectRootFiles);
 		} catch (IOException e) {
-			throw new ClassFinderException("Error while looking for project dir", e);
+			throw new JTestException("Error while looking for project dir", e);
 		}
 	}
 }

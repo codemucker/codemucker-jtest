@@ -8,18 +8,14 @@
 		<version>1.0-SNAPSHOT</version>
 		<relativePath>../codemucker-parent/pom.xml</relativePath>
 	</parent>
-	<artifactId>codemucker-test</artifactId>
+	<artifactId>codemucker-jtest</artifactId>
 	<packaging>jar</packaging>
-	<name>org.codemucker - Test (JFinder and JTest)</name>
-	<description>Bucket library to hold a number of often replicated test code snippets</description>
-	<properties>
-		<xtend.version>2.2.1</xtend.version>
-	</properties>
-
+	<name>org.codemucker - JTest</name>
+	<description>various test helpers. Find your project directory and folders, randomly fill beans</description>
 	<dependencies>
         <dependency>
             <groupId>org.codemucker</groupId>
-            <artifactId>codemucker-annotations</artifactId>
+            <artifactId>codemucker-jpattern</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
