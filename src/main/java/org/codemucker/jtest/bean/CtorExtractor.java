@@ -25,7 +25,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.codemucker.jpattern.BeanProperty;
+import org.codemucker.jpattern.Property;
 
 
 public class CtorExtractor {
@@ -83,8 +83,8 @@ public class CtorExtractor {
 	private String extractArgName(Annotation[] annotations) {
 		String name = null;
 		for (Annotation a : annotations) {
-			if (BeanProperty.class.isAssignableFrom(a.getClass())) {
-				name = ((BeanProperty) a).name().trim();
+			if (Property.class.isAssignableFrom(a.getClass())) {
+				name = ((Property) a).name().trim();
 				if (name.length() == 0) {
 					name = null;
 				}

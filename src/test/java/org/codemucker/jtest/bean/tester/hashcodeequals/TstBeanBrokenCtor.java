@@ -17,7 +17,7 @@ package org.codemucker.jtest.bean.tester.hashcodeequals;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.codemucker.jpattern.BeanProperty;
+import org.codemucker.jpattern.Property;
 
 
 public class TstBeanBrokenCtor {
@@ -29,8 +29,8 @@ public class TstBeanBrokenCtor {
 	}
 
 	public TstBeanBrokenCtor(
-			@BeanProperty(name="fieldA") String fieldA, 
-			@BeanProperty(name="fieldB") String fieldB) {
+			@Property(name="fieldA") String fieldA, 
+			@Property(name="fieldB") String fieldB) {
 		super();
 		this.fieldA = fieldA;
 		// broken assignment we are testing

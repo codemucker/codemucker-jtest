@@ -24,7 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.codemucker.jpattern.BeanProperty;
+import org.codemucker.jpattern.Property;
 import org.codemucker.jtest.ClassNameUtil;
 
 
@@ -247,7 +247,7 @@ public class ClassUtils {
 	public static String getNameFromAnnotation(Field f) {
 		// todo:handle json field name annotations...
 		// todo:allow custom annotations for field names...
-		BeanProperty annon = f.getAnnotation(BeanProperty.class);
+		Property annon = f.getAnnotation(Property.class);
 		if (annon != null) {
 			String name = annon.name().trim();
 			if (name.length() > 0) {
@@ -260,7 +260,7 @@ public class ClassUtils {
 	public static String getNameFromAnnotation(Method m) {
 		// todo:handle json field name annotations...
 		// todo:allow custom annotations for field names...
-		BeanProperty annon = m.getAnnotation(BeanProperty.class);
+		Property annon = m.getAnnotation(Property.class);
 		if (annon != null) {
 			String name = annon.name().trim();
 			if (name.length() > 0) {

@@ -15,24 +15,24 @@
  */
 package org.codemucker.jtest.bean;
 
-import org.codemucker.jpattern.BeanProperty;
+import org.codemucker.jpattern.Property;
 
 public class TstBeanAnnotations {
 
 	private String myField;
 
-	@BeanProperty(name = "noMethods")
+	@Property(name = "noMethods")
 	private String myFieldNoMethods;
 
-	@BeanProperty(name = "  ")
+	@Property(name = "  ")
 	private String myFieldEmptyAnnotationName;
 
-	@BeanProperty(name = "customName")
+	@Property(name = "customName")
 	public String getMyField() {
 		return myField;
 	}
 
-	@BeanProperty(name = "customName")
+	@Property(name = "customName")
 	public void setMyField(String myField) {
 		this.myField = myField;
 	}
