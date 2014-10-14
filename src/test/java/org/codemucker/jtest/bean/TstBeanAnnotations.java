@@ -15,7 +15,7 @@
  */
 package org.codemucker.jtest.bean;
 
-import org.codemucker.jpattern.Property;
+import org.codemucker.jpattern.bean.Property;
 
 public class TstBeanAnnotations {
 

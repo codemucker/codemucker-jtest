@@ -25,7 +25,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.codemucker.jpattern.Property;
+import org.codemucker.jpattern.bean.Property;
 
 
 public class CtorExtractor {

@@ -24,7 +24,7 @@ import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 
-import org.codemucker.jpattern.Property;
+import org.codemucker.jpattern.bean.Property;
 import org.codemucker.jtest.ClassNameUtil;
 
 
