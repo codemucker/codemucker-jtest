@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.UUID;
 
 import com.google.common.collect.ImmutableSet;
 
@@ -13,6 +14,12 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 	
 	private final Collection<String> projectRootFiles;
 
+	private final String TMP_DIR = "target/jmutate-" + MavenLayoutProjectResolver.class.getSimpleName() + "/tmp" + System.nanoTime();
+	
+    private final String sourceVersion;
+    private final  String targetVersion;
+    
+	
 	public MavenLayoutProjectResolver(){
 		this(
 			"pom.xml", // maven2
@@ -22,15 +29,29 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 	        ".classpath" // eclipse
 		);
 	}
-	
+
 	public MavenLayoutProjectResolver(Iterable<String> projectFiles){
 		this.projectRootFiles = ImmutableSet.<String>builder().addAll(projectFiles).build();
+        this.sourceVersion = "1.7";
+        this.targetVersion = "1.7";
 	}
 
 	public MavenLayoutProjectResolver(String... projectFiles){
 		this.projectRootFiles = ImmutableSet.<String>builder().add(projectFiles).build();
+		this.sourceVersion = "1.7";
+		this.targetVersion = "1.7";
 	}
 	
+    @Override
+    public String getSourceVersion() {
+        return sourceVersion;
+    }
+
+    @Override
+    public String getTargetVersion() {
+        return targetVersion;
+    }
+
 	@Override
 	public Collection<File> getMainSrcDirs(){
 		return findDir( "src/main/java" );
@@ -93,9 +114,18 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 		return targetDir;
 	}
 
+    @Override
+    public File newTmpSubDir() {
+        File d = new File(getTmpDir(), UUID.randomUUID().toString());
+        if (!d.mkdirs()) {
+            throw new JTestException("Couldn't create temp directory " + d.getAbsolutePath());
+        }
+        return d;
+    };
+	
 	@Override
     public File getTmpDir() {
-	    return findInProjectDir("target/tmp/", true);
+	    return findInProjectDir(TMP_DIR, true);
     }
 	
 	private File findInProjectDir(String relativeDir, boolean createIfNotFound){
@@ -140,4 +170,5 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 			throw new JTestException("Error while looking for project dir", e);
 		}
 	}
+
 }
