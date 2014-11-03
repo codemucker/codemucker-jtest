@@ -15,8 +15,8 @@
  */
 package org.codemucker.jtest.bean.tester;
 
-import static org.codemucker.jtest.bean.ClassUtils.invokeCtorWith;
-import static org.codemucker.jtest.bean.ClassUtils.invokeMethod;
+import static org.codemucker.jtest.ReflectionUtils.invokeCtorWith;
+import static org.codemucker.jtest.ReflectionUtils.invokeMethod;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 

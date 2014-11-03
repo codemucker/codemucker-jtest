@@ -15,9 +15,9 @@
  */
 package org.codemucker.jtest.bean;
 
-import static org.codemucker.jtest.bean.ClassUtils.getFieldValue;
-import static org.codemucker.jtest.bean.ClassUtils.invokeMethod;
-import static org.codemucker.jtest.bean.ClassUtils.setFieldValue;
+import static org.codemucker.jtest.ReflectionUtils.getFieldValue;
+import static org.codemucker.jtest.ReflectionUtils.invokeMethod;
+import static org.codemucker.jtest.ReflectionUtils.setFieldValue;
 
 public class Property {
 

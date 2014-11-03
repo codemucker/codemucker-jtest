@@ -19,11 +19,11 @@ package org.codemucker.jtest;
 import java.io.File;
 import java.util.Collection;
 
-public class ProjectFinder {
+public class ProjectLayouts {
 
-	private static final ProjectResolver INSTANCE = new MavenLayoutProjectResolver();
+	private static final ProjectLayout INSTANCE = new MavenProjectLayout();
 	
-	public static ProjectResolver getDefaultResolver(){
+	public static ProjectLayout getDefaultResolver(){
 		return INSTANCE;
 	}
 

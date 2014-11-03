@@ -15,12 +15,12 @@
  */
 package org.codemucker.jtest.bean;
 
-import static org.codemucker.jtest.bean.ClassUtils.extractPropertyName;
-import static org.codemucker.jtest.bean.ClassUtils.getLongestCtor;
-import static org.codemucker.jtest.bean.ClassUtils.getNoArgCtor;
-import static org.codemucker.jtest.bean.ClassUtils.isReaderMethod;
-import static org.codemucker.jtest.bean.ClassUtils.isStatic;
-import static org.codemucker.jtest.bean.ClassUtils.isWriterMethod;
+import static org.codemucker.jtest.ReflectionUtils.extractPropertyName;
+import static org.codemucker.jtest.ReflectionUtils.getLongestCtor;
+import static org.codemucker.jtest.ReflectionUtils.getNoArgCtor;
+import static org.codemucker.jtest.ReflectionUtils.isReaderMethod;
+import static org.codemucker.jtest.ReflectionUtils.isStatic;
+import static org.codemucker.jtest.ReflectionUtils.isWriterMethod;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -30,7 +30,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.codemucker.jtest.ClassNameUtil;
+import org.codemucker.jtest.ReflectionUtils;
+import org.codemucker.lang.ClassNameUtil;
 
 
 public class PropertiesExtractor {
@@ -127,7 +128,7 @@ public class PropertiesExtractor {
 		for (PropertyDefinition p : def.getProperties()) {
 			if (p.getRead() != null) {
 				String setterName = "set" + ClassNameUtil.upperFirstChar(p.getName());
-				Method setter = ClassUtils.getMethod(beanClass, setterName, p.getType());
+				Method setter = ReflectionUtils.getMethod(beanClass, setterName, p.getType());
 				if (setter != null) {
 					p.setWrite(setter);
 					// TODO:check generic type?

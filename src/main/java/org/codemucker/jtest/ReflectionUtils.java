@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.codemucker.jtest.bean;
+package org.codemucker.jtest;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -25,19 +25,12 @@ import java.util.Arrays;
 import java.util.Collection;
 
 import org.codemucker.jpattern.bean.Property;
-import org.codemucker.jtest.ClassNameUtil;
+import org.codemucker.jtest.bean.BeanException;
+import org.codemucker.lang.StringUtil;
 
 
-public class ClassUtils {
+public class ReflectionUtils {
 
-	
-	public static String convertFilePathToClassPath(String path) {
-		if (path.charAt(0) == '/') {
-			return path.substring(1).replace('/', '.');
-		} else {
-			return path.replace('/', '.');
-		}
-	}
 	public static <T> Constructor<T> getLongestCtor(Class<T> beanClass) {
 		Constructor<T> longest = null;
 		Constructor<T>[] ctors = (Constructor<T>[]) beanClass.getDeclaredConstructors();
@@ -213,11 +206,11 @@ public class ClassUtils {
 	 */
 	public static String extractPropertyNameFromMethod(String methodName){
 		if (methodName.startsWith("get")) {
-			return ClassNameUtil.lowerFirstChar(methodName.substring(3));
+			return StringUtil.lowerFirstChar(methodName.substring(3));
 		} else if (methodName.startsWith("is")) {
-			return ClassNameUtil.lowerFirstChar(methodName.substring(2));
+			return StringUtil.lowerFirstChar(methodName.substring(2));
 		} else if (methodName.startsWith("set")) {
-			return ClassNameUtil.lowerFirstChar(methodName.substring(3));
+			return StringUtil.lowerFirstChar(methodName.substring(3));
 		}
 		return null;
 	}

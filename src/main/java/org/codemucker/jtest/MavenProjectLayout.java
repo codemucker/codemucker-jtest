@@ -6,21 +6,18 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Collection;
-import java.util.UUID;
+
+import org.codemucker.lang.PathUtil;
 
 import com.google.common.collect.ImmutableSet;
 
-public class MavenLayoutProjectResolver implements ProjectResolver {
+public class MavenProjectLayout implements ProjectLayout {
 	
 	private final Collection<String> projectRootFiles;
 
-	private final String TMP_DIR = "target/jmutate-" + MavenLayoutProjectResolver.class.getSimpleName() + "/tmp" + System.nanoTime();
+	private final String TMP_DIR = "target/jmutate-" + MavenProjectLayout.class.getSimpleName() + "/tmp" + System.nanoTime();
 	
-    private final String sourceVersion;
-    private final  String targetVersion;
-    
-	
-	public MavenLayoutProjectResolver(){
+	public MavenProjectLayout(){
 		this(
 			"pom.xml", // maven2
 	        "project.xml", // maven1
@@ -30,28 +27,14 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 		);
 	}
 
-	public MavenLayoutProjectResolver(Iterable<String> projectFiles){
+	public MavenProjectLayout(Iterable<String> projectFiles){
 		this.projectRootFiles = ImmutableSet.<String>builder().addAll(projectFiles).build();
-        this.sourceVersion = "1.7";
-        this.targetVersion = "1.7";
 	}
 
-	public MavenLayoutProjectResolver(String... projectFiles){
+	public MavenProjectLayout(String... projectFiles){
 		this.projectRootFiles = ImmutableSet.<String>builder().add(projectFiles).build();
-		this.sourceVersion = "1.7";
-		this.targetVersion = "1.7";
 	}
 	
-    @Override
-    public String getSourceVersion() {
-        return sourceVersion;
-    }
-
-    @Override
-    public String getTargetVersion() {
-        return targetVersion;
-    }
-
 	@Override
 	public Collection<File> getMainSrcDirs(){
 		return findDir( "src/main/java" );
@@ -70,6 +53,11 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 	@Override
     public Collection<File> getGeneratedSrcDirs() {
         return findDir( "src/generated/java" );
+    }
+	
+	@Override
+    public Collection<File> getTestGeneratedSrcDirs() {
+        return findDir( "src/test-generated/java" );
     }
 	
 	@Override
@@ -115,13 +103,13 @@ public class MavenLayoutProjectResolver implements ProjectResolver {
 	}
 
     @Override
-    public File newTmpSubDir() {
-        File d = new File(getTmpDir(), UUID.randomUUID().toString());
-        if (!d.mkdirs()) {
-            throw new JTestException("Couldn't create temp directory " + d.getAbsolutePath());
+    public File newTmpSubDir(String name) {
+        try {
+            return PathUtil.newTmpDir(getTmpDir(), name,"");
+        } catch (IOException e) {
+            throw new JTestException("error creating project sub tmp dir", e);
         }
-        return d;
-    };
+    }
 	
 	@Override
     public File getTmpDir() {

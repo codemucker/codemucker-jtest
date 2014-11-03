@@ -15,9 +15,9 @@
  */
 package org.codemucker.jtest.bean.random;
 
-import static org.codemucker.jtest.bean.ClassUtils.invokeCtorWith;
-import static org.codemucker.jtest.bean.ClassUtils.invokeMethod;
-import static org.codemucker.jtest.bean.ClassUtils.setFieldValue;
+import static org.codemucker.jtest.ReflectionUtils.invokeCtorWith;
+import static org.codemucker.jtest.ReflectionUtils.invokeMethod;
+import static org.codemucker.jtest.ReflectionUtils.setFieldValue;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Type;

@@ -125,19 +125,19 @@ public class TestHelper {
 	}
 
 	public Resource getTestJavaSourceDir() {
-		return new Resource(ProjectFinder.findDefaultMavenTestDir());
+		return new Resource(ProjectLayouts.findDefaultMavenTestDir());
 	}
 
 	public Resource getTestResourceDir() {
-		return new Resource(ProjectFinder.findDefaultMavenCompileTestDir());
+		return new Resource(ProjectLayouts.findDefaultMavenCompileTestDir());
 	}
 
 	public Resource getMavenTargetDir() {
-		return new Resource(ProjectFinder.findTargetDir());
+		return new Resource(ProjectLayouts.findTargetDir());
 	}
 
 	public Resource getProjectDir() {
-		return new Resource(ProjectFinder.findProjectDir());
+		return new Resource(ProjectLayouts.findProjectDir());
 	}
 
 	private File generateUniqueDirNameIn(File baseDir, String namePrefix, String namePostfix) {

@@ -6,11 +6,8 @@ import java.util.Collection;
 import com.google.inject.ImplementedBy;
 
 //todo:rename to Project?
-@ImplementedBy(MavenLayoutProjectResolver.class)
-public interface ProjectResolver {
-    
-    String getSourceVersion();
-    String getTargetVersion();
+@ImplementedBy(MavenProjectLayout.class)
+public interface ProjectLayout {
     
 	File getBaseOutputDir();
 
@@ -22,7 +19,7 @@ public interface ProjectResolver {
 	 * Return a newly created random subdirectory within the tmp dir
 	 * @return
 	 */
-	File newTmpSubDir();
+	File newTmpSubDir(String name);
     
 	Collection<File> getMainSrcDirs();
 
@@ -32,7 +29,9 @@ public interface ProjectResolver {
 
 	Collection<File> getTestResourcesDirs();
 
-	Collection<File> getGeneratedSrcDirs();
+    Collection<File> getGeneratedSrcDirs();
+
+    Collection<File> getTestGeneratedSrcDirs();
 
 	Collection<File> getGeneratedResourcesDirs();
 

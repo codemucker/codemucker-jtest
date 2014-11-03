@@ -15,9 +15,9 @@
  */
 package org.codemucker.jtest.bean;
 
-import static org.codemucker.jtest.bean.ClassUtils.getLongestCtor;
-import static org.codemucker.jtest.bean.ClassUtils.getNoArgCtor;
-import static org.codemucker.jtest.bean.ClassUtils.isPublic;
+import static org.codemucker.jtest.ReflectionUtils.getLongestCtor;
+import static org.codemucker.jtest.ReflectionUtils.getNoArgCtor;
+import static org.codemucker.jtest.ReflectionUtils.isPublic;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
