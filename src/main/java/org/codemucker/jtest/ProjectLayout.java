@@ -41,5 +41,4 @@ public interface ProjectLayout {
 
 	Collection<File> getGeneratedCompileTargetDirs();
 
-	
 }

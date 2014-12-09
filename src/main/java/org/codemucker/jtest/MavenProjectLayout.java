@@ -5,6 +5,7 @@ import static com.google.common.collect.Lists.newArrayList;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
 
 import org.codemucker.lang.PathUtil;
@@ -13,27 +14,75 @@ import com.google.common.collect.ImmutableSet;
 
 public class MavenProjectLayout implements ProjectLayout {
 	
-	private final Collection<String> projectRootFiles;
-
 	private final String TMP_DIR = "target/jmutate-" + MavenProjectLayout.class.getSimpleName() + "/tmp" + System.nanoTime();
 	
-	public MavenProjectLayout(){
-		this(
-			"pom.xml", // maven2
-	        "project.xml", // maven1
-	        "build.xml", // ant
-	        ".project", // eclipse
-	        ".classpath" // eclipse
-		);
+	private static final String[] DEFAULT_FILES = new String[]{
+		"pom.xml", // maven2
+        "project.xml", // maven1
+        "build.xml", // ant
+        ".project", // eclipse
+        ".classpath" // eclipse
+    };
+	
+	private final File baseDir;
+	
+	public static MavenProjectLayout create() {
+		return new MavenProjectLayout(currentDir(), DEFAULT_FILES);
 	}
 
-	public MavenProjectLayout(Iterable<String> projectFiles){
+	public static MavenProjectLayout createUsingBaseDir(File baseDir) {
+		return new MavenProjectLayout(baseDir);
+	}
+
+	public static MavenProjectLayout createUsingProjectFiles(String... projectFiles) {
+		return new MavenProjectLayout(currentDir(), projectFiles);
+	}
+
+	public MavenProjectLayout() {
+		this(currentDir(), DEFAULT_FILES);
+	}
+	
+/*	public MavenProjectLayout(Iterable<String> projectFiles){
 		this.projectRootFiles = ImmutableSet.<String>builder().addAll(projectFiles).build();
+		this.baseDir = findBaseDir(this.projectRootFiles);
+	}
+*/
+	private MavenProjectLayout(File startSearchingFromDir, String... projectFiles){
+		this.baseDir = findBaseDir(startSearchingFromDir, Arrays.asList(projectFiles));
 	}
 
-	public MavenProjectLayout(String... projectFiles){
-		this.projectRootFiles = ImmutableSet.<String>builder().add(projectFiles).build();
+	private MavenProjectLayout(File baseDir){
+		this.baseDir = baseDir;
 	}
+
+	
+	private static File currentDir(){
+		return new File("./");
+	}
+	
+	private static File findBaseDir(final File startSearchingFromDir, final Collection<String> projectRootFiles) {
+		FilenameFilter projectDirFilter = new FilenameFilter() {
+			@Override
+			public boolean accept(File dir, String name) {
+				return projectRootFiles.contains(name);
+			}
+		};
+
+		try {
+			File dir = startSearchingFromDir;
+			while (dir != null) {
+				if (dir.listFiles(projectDirFilter).length > 0) {
+					return dir.getCanonicalFile();
+				}
+				dir = dir.getParentFile();
+			}
+			throw new JTestException("Can't find project dir. Started looking in %s, looking for any parent directory containing one of %s",
+			                new File("./").getCanonicalPath(), projectRootFiles);
+		} catch (IOException e) {
+			throw new JTestException("Error while looking for project dir", e);
+		}
+	}
+
 	
 	@Override
 	public Collection<File> getMainSrcDirs(){
@@ -137,26 +186,7 @@ public class MavenProjectLayout implements ProjectLayout {
 	
 	@Override
 	public File getBaseDir() {
-		FilenameFilter projectDirFilter = new FilenameFilter() {
-			@Override
-			public boolean accept(File dir, String name) {
-				return projectRootFiles.contains(name);
-			}
-		};
-
-		try {
-			File dir = new File("./");
-			while (dir != null) {
-				if (dir.listFiles(projectDirFilter).length > 0) {
-					return dir.getCanonicalFile();
-				}
-				dir = dir.getParentFile();
-			}
-			throw new JTestException("Can't find project dir. Started looking in %s, looking for any parent directory containing one of %s",
-			                new File("./").getCanonicalPath(), projectRootFiles);
-		} catch (IOException e) {
-			throw new JTestException("Error while looking for project dir", e);
-		}
+		return baseDir;
 	}
 
 }
