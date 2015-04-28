@@ -10,8 +10,6 @@ import java.util.Collection;
 
 import org.codemucker.lang.PathUtil;
 
-import com.google.common.collect.ImmutableSet;
-
 public class MavenProjectLayout implements ProjectLayout {
 	
 	private final String TMP_DIR = "target/jmutate-" + MavenProjectLayout.class.getSimpleName() + "/tmp" + System.nanoTime();
@@ -20,33 +18,48 @@ public class MavenProjectLayout implements ProjectLayout {
 		"pom.xml", // maven2
         "project.xml", // maven1
         "build.xml", // ant
+        "build.gradle", // gradle
         ".project", // eclipse
-        ".classpath" // eclipse
+        ".classpath", // eclipse
+        "*.ipr", //intellij file based config
+        "*.iws",//intellij file based config
+        ".idea",//intellij dir based config
+        ".netbeans"//possibly. Not sure how reliable this is
     };
 	
 	private final File baseDir;
 	
+	/**
+	 * Create a new maven layout starting in the current directory and walking up until a pom.xml file is found
+	 * @return
+	 */
 	public static MavenProjectLayout create() {
 		return new MavenProjectLayout(currentDir(), DEFAULT_FILES);
 	}
 
-	public static MavenProjectLayout createUsingBaseDir(File baseDir) {
-		return new MavenProjectLayout(baseDir);
-	}
-
+	/**
+	 * Create a new maven layout walking up from the current directory until a directory is found with one of the given project files
+	 * @param projectFiles
+	 * @return
+	 */
 	public static MavenProjectLayout createUsingProjectFiles(String... projectFiles) {
 		return new MavenProjectLayout(currentDir(), projectFiles);
+	}
+
+	/**
+	 * Create a new maven layout using the given basedir. No walking up looking for a pom.
+	 * 
+	 * @param baseDir
+	 * @return
+	 */
+	public static MavenProjectLayout createUsingBaseDir(File baseDir) {
+		return new MavenProjectLayout(baseDir);
 	}
 
 	public MavenProjectLayout() {
 		this(currentDir(), DEFAULT_FILES);
 	}
 	
-/*	public MavenProjectLayout(Iterable<String> projectFiles){
-		this.projectRootFiles = ImmutableSet.<String>builder().addAll(projectFiles).build();
-		this.baseDir = findBaseDir(this.projectRootFiles);
-	}
-*/
 	private MavenProjectLayout(File startSearchingFromDir, String... projectFiles){
 		this.baseDir = findBaseDir(startSearchingFromDir, Arrays.asList(projectFiles));
 	}
@@ -63,7 +76,7 @@ public class MavenProjectLayout implements ProjectLayout {
 	private static File findBaseDir(final File startSearchingFromDir, final Collection<String> projectRootFiles) {
 		FilenameFilter projectDirFilter = new FilenameFilter() {
 			@Override
-			public boolean accept(File dir, String name) {
+			public boolean accept(File fileOrDir, String name) {
 				return projectRootFiles.contains(name);
 			}
 		};
