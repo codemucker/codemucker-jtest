@@ -10,7 +10,7 @@
 	</parent>
 	<artifactId>codemucker-jtest</artifactId>
 	<packaging>jar</packaging>
-	<name>org.codemucker - JTest</name>
+	<name>org.codemucker - JTest (Test Utils)</name>
 	<description>various test helpers. Find your project directory and folders, randomly fill beans</description>
 	<dependencies>
         <dependency>
